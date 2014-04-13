@@ -8,9 +8,11 @@ using UnityEngine;
 namespace KSPAPIExtensions.DebuggingUtils
 {
 
-    public class PhysicsDebugger : PartModule
+    /// <summary>
+    /// Part module that dumps out the physics constants pertaining to the part every 10 seconds.
+    /// </summary>
+    public class ModulePhysicsDebugger : PartModule
     {
-
         private double lastFixedUpdate;
 
         public override void OnFixedUpdate()

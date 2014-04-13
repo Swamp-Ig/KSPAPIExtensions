@@ -27,6 +27,11 @@ namespace KSPAPIExtensions.DebuggingUtils
 
     public static class Debugging
     {
+
+        /// <summary>
+        /// Produce a string that displays the heirachy and other information about a transform.
+        /// </summary>
+        /// <returns>String containing the dump.</returns>
         public static string DumpTree(this Transform t, DumpTreeOption options = DumpTreeOption.Default)
         {
             StringBuilder sb = new StringBuilder();
@@ -102,6 +107,9 @@ namespace KSPAPIExtensions.DebuggingUtils
                 DumpTree(t.GetChild(i), options, level + 1, sb);
         }
 
+        /// <summary>
+        /// Create a string with the contents of a mesh.
+        /// </summary>
         public static string DumpMesh(this Mesh mesh)
         {
             Vector3[] verticies = mesh.vertices;
@@ -132,6 +140,9 @@ namespace KSPAPIExtensions.DebuggingUtils
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Dump out all the fields from an object
+        /// </summary>
         public static string DumpObjectFields(this object obj, BindingFlags flags = BindingFlags.Default)
         {
             StringBuilder sb = new StringBuilder();
