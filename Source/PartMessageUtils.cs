@@ -58,7 +58,7 @@ namespace KSPAPIExtensions.PartMessage
     [AttributeUsage(AttributeTargets.Delegate)]
     public class PartMessage : Attribute
     {
-        public PartMessage(Type parent = null)
+        public PartMessage(Type parent = null, bool isAbstract = false)
         {
             if (parent != null)
             {
@@ -68,6 +68,7 @@ namespace KSPAPIExtensions.PartMessage
                     throw new ArgumentException("Parent does not have the PartMessage attribute");
             }
             this.parent = parent;
+            this.isAbstract = isAbstract;
         }
 
         /// <summary>
@@ -77,6 +78,11 @@ namespace KSPAPIExtensions.PartMessage
         /// of the argument list for this event.
         /// </summary>
         readonly public Type parent;
+
+        /// <summary>
+        /// This event is considered abstract - it should not be send directly but should be sent from one of the child events.
+        /// </summary>
+        readonly bool isAbstract;
     }
 
     /// <summary>
@@ -204,7 +210,7 @@ namespace KSPAPIExtensions.PartMessage
     /// Listen for this to get notification when any physical constant is changed
     /// including the mass, CoM, moments of inertia, boyancy, ect.
     /// </summary>
-    [PartMessage]
+    [PartMessage(isAbstract: true)]
     public delegate void PartPhysicsChanged();
 
     /// <summary>
@@ -229,7 +235,7 @@ namespace KSPAPIExtensions.PartMessage
     /// <summary>
     /// Message for when the part's resource list is modified in some way.
     /// </summary>
-    [PartMessage]
+    [PartMessage(isAbstract: true)]
     public delegate void PartResourcesChanged();
 
     /// <summary>
