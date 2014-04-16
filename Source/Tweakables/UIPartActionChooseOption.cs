@@ -24,7 +24,7 @@ namespace KSPAPIExtensions
             UIPartActionChooseOption edit = editGo.GetComponent<UIPartActionChooseOption>();
             editGo.SetActive(false);
 
-            // TODO: since I don't have access to EZE GUI, I'm copying out bits from other existing GUIs 
+            // TODO: since I don'type have access to EZE GUI, I'm copying out bits from other existing GUIs 
             // if someone does have access, they could do this better although really it works pretty well.
             UIPartActionButton evtp = UIPartActionController.Instance.eventItemPrefab;
             GameObject srcTextGo = evtp.transform.Find("Text").gameObject;

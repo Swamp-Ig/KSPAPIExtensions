@@ -35,16 +35,20 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="MathUtils.cs" />
-    <Compile Include="DebuggingUtils.cs" />
-    <Compile Include="PartMessageUtils.cs" />
-    <Compile Include="PhysicsDebugger.cs" />
+    <Compile Include="Utils\MathUtils.cs" />
+    <Compile Include="Utils\DebuggingUtils.cs" />
+    <Compile Include="PartMessage\CommonMessages.cs" />
+    <Compile Include="PartMessage\Attributes.cs" />
+    <Compile Include="PartMessage\zzImplementation.cs" />
+    <Compile Include="PartMessage\PartMessageService.cs" />
+    <Compile Include="Utils\PhysicsDebugger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="KSPUtils.cs" />
-    <Compile Include="UnityUtils.cs" />
-    <Compile Include="UIPartActionChooseOption.cs" />
-    <Compile Include="UIPartActionsExtended.cs" />
-    <Compile Include="UIPartActionFloatEdit.cs" />
+    <Compile Include="Utils\KSPUtils.cs" />
+    <Compile Include="Utils\SystemUtils.cs" />
+    <Compile Include="Utils\UnityUtils.cs" />
+    <Compile Include="Tweakables\UIPartActionChooseOption.cs" />
+    <Compile Include="Tweakables\UIPartActionsExtended.cs" />
+    <Compile Include="Tweakables\UIPartActionFloatEdit.cs" />
     <Compile Include="zzVersionChecker.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -61,6 +65,7 @@
       <SpecificVersion>False</SpecificVersion>
     </Reference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(TargetPath)" "$(SolutionDir)..\"</PostBuildEvent>

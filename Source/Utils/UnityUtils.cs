@@ -127,7 +127,6 @@ namespace KSPAPIExtensions
         }
     }
 
-#if false
     /// <summary>
     /// Be aware this will not prevent a non singleton constructor
     ///   such as `T myT = new T();`
@@ -149,7 +148,7 @@ namespace KSPAPIExtensions
                 {
                     Debug.LogWarning("[Singleton] Instance '" + typeof(T) +
                         "' already destroyed on application quit." +
-                        " Won't create again - returning null.");
+                        " Won'type create again - returning null.");
                     return null;
                 }
 
@@ -205,6 +204,5 @@ namespace KSPAPIExtensions
             applicationIsQuitting = true;
         }
     }
-#endif
 
 }
