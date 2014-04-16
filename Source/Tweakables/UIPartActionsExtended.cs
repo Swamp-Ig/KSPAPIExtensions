@@ -9,13 +9,28 @@ using KSPAPIExtensions.DebuggingUtils;
 
 namespace KSPAPIExtensions
 {
-    [KSPAddon(KSPAddon.Startup.Instantly, true)]
-    internal class UIPartActionsExtendedRegistration : MonoBehaviour
+    [KSPAddon(KSPAddon.Startup.EditorAny, false)]
+    internal class UIPartActionsExtendedEditorRegistrationAddon : MonoBehaviour
     {
+        public void Start()
+        {
+            UIPartActionsExtendedRegistration.Register();
+        }
+    }
+    [KSPAddon(KSPAddon.Startup.Flight, false)]
+    internal class UIPartActionsExtendedFlightRegistrationAddon : MonoBehaviour
+    {
+        public void Start()
+        {
+            UIPartActionsExtendedRegistration.Register();
+        }
+    }
 
-        private static EventData<GameScenes>.OnEvent sceneChangedListener;
+    internal static class UIPartActionsExtendedRegistration
+    {
+        private static bool? master;
 
-        internal void Start()
+        private static bool CheckMaster()
         {
             // Do the version election
             // If we are loaded from the first loaded assembly that has this class, then we are responsible to destroy
@@ -23,29 +38,13 @@ namespace KSPAPIExtensions
                              where ass.assembly.GetType(typeof(UIPartActionsExtendedRegistration).FullName, false) != null
                              orderby ass.assembly.GetName().Version descending, ass.path ascending
                              select ass;
-            bool winner = candidates.First().assembly == Assembly.GetExecutingAssembly();
-
-
-            // If we are the winner, then we need to register the label and resource editor controlls
-            // If not then we still need to register the float edit and choose option controlls as the
-            // types will not compare equal between different versions.
-            if (sceneChangedListener == null)
-            {
-                sceneChangedListener = scene => Register(winner);
-                GameEvents.onGameSceneLoadRequested.Add(sceneChangedListener);
-            }
+            return candidates.First().assembly == Assembly.GetExecutingAssembly();
         }
 
-        internal void OnDestroy()
+        internal static void Register()
         {
-            GameEvents.onGameSceneLoadRequested.Remove(sceneChangedListener);
-            sceneChangedListener = null;
-        }
-
-        internal static void Register(bool registerLabels)
-        {
-            if (!(GameSceneFilter.AnyEditor | GameSceneFilter.Flight).IsLoaded())
-                return;
+            if (master == null)
+                master = CheckMaster();
 
             UIPartActionController controller = UIPartActionController.Instance;
             if (controller == null)
@@ -59,7 +58,7 @@ namespace KSPAPIExtensions
                                     select fld).First();
             List<Type> fieldPrefabTypes = (List<Type>)typesField.GetValue(controller);
 
-            // Register prefabs. This needs to be done for every version of the assembly.
+            // Register prefabs. This needs to be done for every version of the assembly. (the types might be called the same, but they aren't the same)
             controller.fieldPrefabs.Add(UIPartActionFloatEdit.CreateTemplate());
             fieldPrefabTypes.Add(typeof(UI_FloatEdit));
 
@@ -67,7 +66,7 @@ namespace KSPAPIExtensions
             fieldPrefabTypes.Add(typeof(UI_ChooseOption));
 
             // Register the label and resource editor fields. This should only be done by the most recent version.
-            if (registerLabels)
+            if (GameSceneFilter.AnyEditor.IsLoaded() && (master ?? (master = CheckMaster())).Value)
             {
                 int idx = controller.fieldPrefabs.FindIndex(item => item.GetType() == typeof(UIPartActionLabel));
                 controller.fieldPrefabs[idx] = UIPartActionLabelImproved.CreateTemplate((UIPartActionLabel)controller.fieldPrefabs[idx]);
@@ -112,7 +111,7 @@ namespace KSPAPIExtensions
 
             SIPrefix prefix = resource.maxAmount.GetSIPrefix();
             resource.amount = prefix.Round((double)slider.Value * this.resource.maxAmount, sigFigs:4);
-            PartMessageFinder.Service.SendPartMessage(part, typeof(PartResourceInitialAmountChanged), resource);
+            PartMessageFinder.Service.SendPartMessage(this, part, typeof(PartResourceInitialAmountChanged), resource);
             if (this.scene == UI_Scene.Editor)
                 SetSymCounterpartsAmount(resource.amount);
         }
@@ -128,7 +127,7 @@ namespace KSPAPIExtensions
                     continue;
                 PartResource symResource = sym.Resources[resource.info.name];
                 symResource.amount = amount;
-                PartMessageFinder.Service.SendPartMessage(sym, typeof(PartResourceInitialAmountChanged), symResource);
+                PartMessageFinder.Service.SendPartMessage(this, sym, typeof(PartResourceInitialAmountChanged), symResource);
             }
 	    }
 
