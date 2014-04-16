@@ -75,21 +75,10 @@ namespace KSPAPIExtensions.PartMessage
         #region Object scanning
         /// <summary>
         /// Scan an object for messageName events and messageName listeners and hook them up.
-        /// Note that all references are dumped on game scene change, so objects must be rescanned when reloaded.
+        /// This is generally called in the constructor for the object.
         /// </summary>
         /// <param name="obj">the object to scan</param>
-        void ScanObject(object obj);
-
-        /// <summary>
-        /// Scan a module for messageName events and listeners. 
-        /// </summary>
-        void ScanModule(PartModule module);
-
-        /// <summary>
-        /// Scan a part for message events and listeners.
-        /// </summary>
-        void ScanPart(Part part);
-
+        void ScanObject<T>(T obj);
         #endregion
 
         #region Message Sending and Filtering
@@ -153,6 +142,11 @@ namespace KSPAPIExtensions.PartMessage
         public static PartMessageSourceInfo SourceInfo
         {
             get { return Service.SourceInfo; }
+        }
+
+        public static void Register<T>(T obj) 
+        {
+            Service.ScanObject<T>(obj);
         }
 
         private PartMessageFinder() { }

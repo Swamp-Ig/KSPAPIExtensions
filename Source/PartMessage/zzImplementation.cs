@@ -109,79 +109,17 @@ namespace KSPAPIExtensions.PartMessage
         /// Note that all references are dumped on game scene change, so objects must be rescanned when reloaded.
         /// </summary>
         /// <param name="obj">the object to scan</param>
-        public void ScanObject(object obj)
+        public void ScanObject<T>(T obj)
         {
-            if (obj is PartModule)
-                ScanModule((PartModule)obj);
-            else if (obj is Part)
-                ScanPart((Part)obj);
-            else
-                ScanObjectInternal(obj);
-        }
+            Type t = typeof(T);
 
-        /// <summary>
-        /// Scan a module for messageName events and listeners. 
-        /// </summary>
-        /// <param name="module"></param>
-        public void ScanModule(PartModule module)
-        {
-            if (!NeedsManager(module.GetType()))
-                return;
-
-            PartMessageBehaviour manager = module.GetComponent<PartMessageBehaviour>();
-            if (manager == null)
-            {
-                if (!NeedsManager(module.GetType()))
-                    return;
-                manager = module.gameObject.AddComponent<PartMessageBehaviour>();
-                ScanObjectInternal(module.part);
-            }
-                
-            if (manager.modulesScanned.Contains(module))
-                return;
-
-            ScanObjectInternal((object)module);
-            manager.modulesScanned.Add(module);
-        }
-
-        public void ScanPart(Part part)
-        {
-            PartMessageBehaviour manager = part.GetComponent<PartMessageBehaviour>();
-            if (manager != null)
-                return;
-            manager = part.gameObject.AddComponent<PartMessageBehaviour>();
-            ScanPartInternal(part, manager);
-        }
-
-        internal void ScanPartInternal(Part part, PartMessageBehaviour manager)
-        {
-            ScanObjectInternal(part);
-            foreach (PartModule module in part.Modules)
-            {
-                if (module == manager)
-                    continue;
-
-                ScanModuleInternal(module, manager);
-            }
-        }
-
-        internal void ScanModuleInternal(PartModule module, PartMessageBehaviour manager)
-        {
-            ScanObjectInternal(module);
-            manager.modulesScanned.Add(module);
-        }
-
-        private void ScanObjectInternal(object obj)
-        {
-            Type t = obj.GetType();
-
-            foreach (MethodInfo meth in t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            foreach (MethodInfo meth in t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             {
                 foreach (PartMessageListener attr in meth.GetCustomAttributes(typeof(PartMessageListener), true))
                     AddListener(obj, meth, attr);
             }
 
-            foreach (EventInfo evt in t.GetEvents(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            foreach (EventInfo evt in t.GetEvents(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             {
                 Type deleg = evt.EventHandlerType;
                 if (evt.GetCustomAttributes(typeof(PartMessageEvent), true).Length == 0)
@@ -695,8 +633,6 @@ namespace KSPAPIExtensions.PartMessage
             foreach (var a in AssemblyLoader.loadedAssemblies)
                 assem.Add(a.assembly.GetName().Name);
             
-
-            Dictionary<string, bool> requiresManagerCache = new Dictionary<string, bool>();
             foreach (UrlDir.UrlConfig urlConf in GameDatabase.Instance.root.AllConfigs)
             {
                 if (urlConf.type != "PART")
@@ -705,22 +641,6 @@ namespace KSPAPIExtensions.PartMessage
                 ConfigNode part = urlConf.config;
                 if(CheckPartRequiresAssembly(assem, part))
                     continue;
-
-                if (CheckPartNeedsManager(part, requiresManagerCache))
-                {
-                    Debug.Log("[PartMessageService] Adding support for part messages to part " + part.GetValue("name"));
-
-                    try
-                    {
-                        ConfigNode myModule = new ConfigNode("MODULE");
-                        myModule.AddValue("name", typeof(PartMessageBootstrapModule).Name);
-                        part.AddNode(myModule);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                    }
-                }
             }
         }
 
@@ -927,68 +847,5 @@ namespace KSPAPIExtensions.PartMessage
         }
     }
     #endregion
-
-    #region Bootstrap modules.
-    internal class PartMessageBootstrapModule : PartModule
-    {
-        public override void OnAwake()
-        {
-            if (gameObject.GetComponent<PartMessageBehaviour>() == null)
-                gameObject.AddComponent<PartMessageBehaviour>();
-
-            if (GameSceneFilter.AnyEditor.IsLoaded())
-                part.RemoveModule(this);
-        }
-
-        public override void OnLoad(ConfigNode node)
-        {
-            // So hopefully this is the last module in the list, and we can successfully add the
-            // manager here. The only case (major edge case) where this wouldn't work would be 
-            // if another KSPAddon adds in a different module at the end of the list, and then
-            // uses part messages in the GetInfo method. 
-
-            if (gameObject.GetComponent<PartMessageBehaviour>() == null)
-                gameObject.AddComponent<PartMessageBehaviour>();
-
-            if (GameSceneFilter.Flight.IsLoaded())
-                part.RemoveModule(this);
-        }
-
-        public override string GetInfo()
-        {
-            // There's a chance the manager was not last on the list. If it 
-            if (part.Modules[part.Modules.Count - 1] != this)
-            {
-                ServiceImpl svc = (ServiceImpl)PartMessageFinder.Service;
-                PartMessageBehaviour manager = gameObject.GetComponent<PartMessageBehaviour>();
-                // Just scan any modules that have been put in after this one.
-                for (int i = part.Modules.IndexOf(this) + 1; i < part.Modules.Count; ++i)
-                {
-                    svc.ScanModuleInternal(part.Modules[i], manager);
-                }
-            }
-
-            return string.Empty;
-        }
-    }
-
-    internal class PartMessageBehaviour : MonoBehaviour
-    {
-        public void Awake()
-        {
-            Part part = gameObject.GetComponent<Part>();
-            // No part in editor icons. Might as well remove this behaviour.
-            if (part == null)
-            {
-                DestroyObject(this);
-                return;
-            }
-            ((ServiceImpl)PartMessageFinder.Service).ScanPartInternal(part, this);
-        }
-
-        internal List<PartModule> modulesScanned = new List<PartModule>();
-    }
-    #endregion
-
 
 }
