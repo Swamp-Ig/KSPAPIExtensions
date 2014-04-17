@@ -11,95 +11,88 @@ using KSPAPIExtensions.PartMessage;
 
 namespace KSPAPIExtensions.PartMessage
 {
-    internal class ServiceImpl : MonoBehaviour, PartMessageService
+    internal class ServiceImpl : MonoBehaviour, IPartMessageService, ISourceInfo
     {
 
         #region MessageSourceInfo
 
-        public CurrentMessageInfo SourceInfo
+        public ISourceInfo SourceInfo
         {
-            get { return sourceInfo; }
+            get { return this; }
         }
 
-        private SourceInfoImpl sourceInfo;
-
-        internal class SourceInfoImpl : CurrentMessageInfo
+        Type ISourceInfo.message
         {
-            internal SourceInfoImpl() { }
-
-            public Type message
-            {
-                get { return curr.Peek().message; }
-            }
-
-            public IEnumerable<Type> allMessages
-            {
-                get
-                {
-                    return curr.Peek();
-                }
-            }
-
-            public object source
-            {
-                get
-                {
-                    return curr.Peek().source;
-                }
-            }
-
-            public Part part
-            {
-                get
-                {
-                    return curr.Peek().part;
-                }
-            }
-
-            public PartModule srcModule
-            {
-                get { return source as PartModule; }
-            }
-
-            public PartRelationship SourceRelationTo(Part destPart)
-            {
-                Part src = part;
-                if (src == null)
-                    return PartRelationship.Unknown;
-                return src.RelationTo(destPart);
-            }
-
-            #region Internal Bits
-            private Stack<Info> curr = new Stack<Info>();
-
-            internal IDisposable Push(object source, Part part, Type message)
-            {
-                return new Info(this, source, part, message);
-            }
-
-            private class Info : MessageEnumerable, IDisposable
-            {
-                internal Info(SourceInfoImpl info, object source, Part part, Type message)
-                    : base(message)
-                {
-                    this.source = source;
-                    this.part = part;
-                    this.info = info;
-                    info.curr.Push(this);
-                }
-
-                readonly internal SourceInfoImpl info;
-                readonly internal Part part;
-                readonly internal object source;
-
-                void IDisposable.Dispose()
-                {
-                    info.curr.Pop();
-                }
-
-            }
-            #endregion
+            get { return sourceInfoStack.Peek().message; }
         }
+
+        IEnumerable<Type> ISourceInfo.allMessages
+        {
+            get
+            {
+                return sourceInfoStack.Peek();
+            }
+        }
+
+        object ISourceInfo.source
+        {
+            get
+            {
+                return sourceInfoStack.Peek().source;
+            }
+        }
+
+        Part ISourceInfo.part
+        {
+            get
+            {
+                return sourceInfoStack.Peek().part;
+            }
+        }
+
+        PartModule ISourceInfo.srcModule
+        {
+            get { return ((ISourceInfo)this).source as PartModule; }
+        }
+
+        PartRelationship ISourceInfo.SourceRelationTo(Part destPart)
+        {
+            Part src = ((ISourceInfo)this).part;
+            if (src == null)
+                return PartRelationship.Unknown;
+            return src.RelationTo(destPart);
+        }
+
+        #region Internal Bits
+        private Stack<SourceInfoStackEntry> sourceInfoStack = new Stack<SourceInfoStackEntry>();
+
+        internal IDisposable PushSourceInfo(object source, Part part, Type message)
+        {
+            return new SourceInfoStackEntry(this, source, part, message);
+        }
+
+        private class SourceInfoStackEntry : MessageEnumerable, IDisposable
+        {
+            internal SourceInfoStackEntry(ServiceImpl service, object source, Part part, Type message)
+                : base(message)
+            {
+                this.source = source;
+                this.part = part;
+                this.service = service;
+                service.sourceInfoStack.Push(this);
+            }
+
+            readonly internal ServiceImpl service;
+            readonly internal Part part;
+            readonly internal object source;
+
+            void IDisposable.Dispose()
+            {
+                service.sourceInfoStack.Pop();
+            }
+
+        }
+        #endregion
         #endregion
 
         #region Object scanning
@@ -228,10 +221,10 @@ namespace KSPAPIExtensions.PartMessage
 
             message = TranslateMessage(message);
 
-            using (sourceInfo.Push(source, part, message))
+            using (PushSourceInfo(source, part, message))
             {
                 // Send the message
-                foreach (Type messageCls in sourceInfo.allMessages)
+                foreach (Type messageCls in SourceInfo.allMessages)
                 {
                     string messageName = messageCls.FullName;
 
@@ -260,7 +253,7 @@ namespace KSPAPIExtensions.PartMessage
                         PartModule module = info.module;
                         if ((module == null || (module.isEnabled && module.enabled))
                             && info.attr.scenes.IsLoaded()
-                            && PartUtils.RelationTest(sourceInfo.part, info.part, info.attr.relations)) 
+                            && PartUtils.RelationTest(SourceInfo.part, info.part, info.attr.relations)) 
                         {
                             try
                             {
@@ -269,7 +262,7 @@ namespace KSPAPIExtensions.PartMessage
                             catch (TargetException ex)
                             {
                                 // Swallow target exceptions, but not anything else.
-                                Debug.LogError(string.Format("Invoking {0}.{1} to handle message {2} resulted in an exception.", target.GetType(), node.Value.method, sourceInfo.message));
+                                Debug.LogError(string.Format("Invoking {0}.{1} to handle message {2} resulted in an exception.", target.GetType(), node.Value.method, SourceInfo.message));
                                 Debug.LogException(ex.InnerException);
                             }
                         }
@@ -446,7 +439,7 @@ namespace KSPAPIExtensions.PartMessage
 
                 message = TranslateMessage(message);
 
-                using (service.sourceInfo.Push(source, part, message))
+                using (service.PushSourceInfo(source, part, message))
                 {
                     return this.Filter(source, part, message, args);
                 }
@@ -615,9 +608,6 @@ namespace KSPAPIExtensions.PartMessage
 
         internal void Awake() 
         {
-            // Create source info
-            sourceInfo = new SourceInfoImpl();
-
             // Clear the listeners list when reloaded.
             sceneChangedListener = scene => listeners.Clear();
             GameEvents.onGameSceneLoadRequested.Add(sceneChangedListener);

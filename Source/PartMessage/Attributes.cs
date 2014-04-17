@@ -100,7 +100,7 @@ namespace KSPAPIExtensions.PartMessage
     /// A filter method for outgoing messages. This is called prior to delivery of any messages. If the method returns true
     /// then the message is considered handled and will not be delivered.
     /// 
-    /// Information about the source of the message is avaiable from the CurrentMessageInfo as usual.
+    /// Information about the source of the message is avaiable from the ISourceInfo as usual.
     /// </summary>
     /// <param name="source">The class where the event is defined</param>
     /// <param name="message">The message being sent.</param>
