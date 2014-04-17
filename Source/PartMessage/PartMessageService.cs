@@ -14,7 +14,7 @@ namespace KSPAPIExtensions.PartMessage
     /// PartMessageListeners can use the properties in this class to examine details about the current message being
     /// handled
     /// </summary>
-    public interface PartMessageSourceInfo
+    public interface CurrentMessageInfo
     {
         /// <summary>
         /// The message type
@@ -70,11 +70,11 @@ namespace KSPAPIExtensions.PartMessage
         /// <summary>
         /// Get the source info, an interface used to get information about the current message source.
         /// </summary>
-        PartMessageSourceInfo SourceInfo { get; }
+        CurrentMessageInfo SourceInfo { get; }
 
         #region Object scanning
         /// <summary>
-        /// Scan an object for messageName events and messageName listeners and hook them up.
+        /// Scan an object for message events and message listeners and hook them up.
         /// This is generally called in the constructor for the object.
         /// </summary>
         /// <param name="obj">the object to scan</param>
@@ -139,7 +139,7 @@ namespace KSPAPIExtensions.PartMessage
             private set;
         }
 
-        public static PartMessageSourceInfo SourceInfo
+        public static CurrentMessageInfo SourceInfo
         {
             get { return Service.SourceInfo; }
         }

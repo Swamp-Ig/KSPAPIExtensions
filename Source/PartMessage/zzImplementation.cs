@@ -16,14 +16,14 @@ namespace KSPAPIExtensions.PartMessage
 
         #region MessageSourceInfo
 
-        public PartMessageSourceInfo SourceInfo
+        public CurrentMessageInfo SourceInfo
         {
             get { return sourceInfo; }
         }
 
         private SourceInfoImpl sourceInfo;
 
-        internal class SourceInfoImpl : PartMessageSourceInfo
+        internal class SourceInfoImpl : CurrentMessageInfo
         {
             internal SourceInfoImpl() { }
 
@@ -105,7 +105,7 @@ namespace KSPAPIExtensions.PartMessage
         #region Object scanning
 
         /// <summary>
-        /// Scan an object for messageName events and messageName listeners and hook them up.
+        /// Scan an object for message events and message listeners and hook them up.
         /// Note that all references are dumped on game scene change, so objects must be rescanned when reloaded.
         /// </summary>
         /// <param name="obj">the object to scan</param>
@@ -175,7 +175,7 @@ namespace KSPAPIExtensions.PartMessage
 
         private void AddListener(object target, MethodInfo meth, PartMessageListener attr)
         {
-            //Debug.LogWarning(string.Format("[PartMessageUtils] {0}.{1} Adding other for {2}", target.GetType().Name, meth.Name, attr.messageName.FullName));
+            //Debug.LogWarning(string.Format("[PartMessageUtils] {0}.{1} Adding other for {2}", target.GetType().Name, meth.Name, attr.message.FullName));
 
             if (!attr.scenes.IsLoaded())
                 return;
@@ -269,7 +269,7 @@ namespace KSPAPIExtensions.PartMessage
                             catch (TargetException ex)
                             {
                                 // Swallow target exceptions, but not anything else.
-                                Debug.LogError(string.Format("Invoking {0}.{1} to handle messageName {2} resulted in an exception.", target.GetType(), node.Value.method, sourceInfo.message));
+                                Debug.LogError(string.Format("Invoking {0}.{1} to handle message {2} resulted in an exception.", target.GetType(), node.Value.method, sourceInfo.message));
                                 Debug.LogException(ex.InnerException);
                             }
                         }
@@ -335,7 +335,7 @@ namespace KSPAPIExtensions.PartMessage
             Type message = evt.EventHandlerType;
             MethodInfo m = message.GetMethod("Invoke", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-            //Debug.LogWarning(string.Format("[PartMessageUtils] {0}.{1} Adding event handler for {2}", source.GetType().Name, evt.Name, messageName.FullName));
+            //Debug.LogWarning(string.Format("[PartMessageUtils] {0}.{1} Adding event handler for {2}", source.GetType().Name, evt.Name, message.FullName));
 
             ParameterInfo[] pLst = m.GetParameters();
             ParameterExpression[] peLst = new ParameterExpression[pLst.Length];
