@@ -14,7 +14,7 @@ namespace KSPAPIExtensions.PartMessage
     /// PartMessageListeners can use the properties in this class to examine details about the current message being
     /// handled
     /// </summary>
-    public interface PartMessageSourceInfo
+    public interface ISourceInfo
     {
         /// <summary>
         /// The message type
@@ -64,17 +64,16 @@ namespace KSPAPIExtensions.PartMessage
         PartRelationship SourceRelationTo(Part destPart);
     }
 
-    public interface PartMessageService
+    public interface IPartMessageService
     {
-
         /// <summary>
-        /// Get the source info, an interface used to get information about the current message source.
+        /// Get the source service, an interface used to get information about the current message source.
         /// </summary>
-        PartMessageSourceInfo SourceInfo { get; }
+        ISourceInfo SourceInfo { get; }
 
         #region Object scanning
         /// <summary>
-        /// Scan an object for messageName events and messageName listeners and hook them up.
+        /// Scan an object for message events and message listeners and hook them up.
         /// This is generally called in the constructor for the object.
         /// </summary>
         /// <param name="obj">the object to scan</param>
@@ -133,13 +132,13 @@ namespace KSPAPIExtensions.PartMessage
     [KSPAddonFixed(KSPAddon.Startup.Instantly, false, typeof(PartMessageFinder))]
     public sealed class PartMessageFinder : MonoBehaviour
     {
-        public static PartMessageService Service
+        public static IPartMessageService Service
         {
             get;
             private set;
         }
 
-        public static PartMessageSourceInfo SourceInfo
+        public static ISourceInfo SourceInfo
         {
             get { return Service.SourceInfo; }
         }
@@ -161,7 +160,7 @@ namespace KSPAPIExtensions.PartMessage
 
             // If we are loaded from the first loaded assembly that has this class, then we are responsible to destroy
             var candidates = (from ass in AssemblyLoader.loadedAssemblies
-                             where ass.assembly.GetType(typeof(PartMessageService).FullName, false) != null
+                             where ass.assembly.GetType(typeof(IPartMessageService).FullName, false) != null
                              orderby ass.assembly.GetName().Version descending, ass.path ascending
                              select ass).ToArray();
             var winner = candidates.First();
