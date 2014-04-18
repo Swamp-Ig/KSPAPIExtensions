@@ -35,6 +35,22 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DuckTyping\AmbiguousTypesException.cs" />
+    <Compile Include="DuckTyping\DelegateDuckCaster.cs" />
+    <Compile Include="DuckTyping\DelegateDuckProxyType.cs" />
+    <Compile Include="DuckTyping\DuckProxyType.cs" />
+    <Compile Include="DuckTyping\DuckTyping.cs" />
+    <Compile Include="DuckTyping\EnumStringDuckCaster.cs" />
+    <Compile Include="DuckTyping\FromTypeTree.cs" />
+    <Compile Include="DuckTyping\GenericParameterDuckCaster.cs" />
+    <Compile Include="DuckTyping\IDuckCaster.cs" />
+    <Compile Include="DuckTyping\IDuckProxy.cs" />
+    <Compile Include="DuckTyping\InterfaceDuckCaster.cs" />
+    <Compile Include="DuckTyping\InterfaceDuckProxyType.cs" />
+    <Compile Include="DuckTyping\InterfaceStaticDuckCaster.cs" />
+    <Compile Include="DuckTyping\IStaticDuckCaster.cs" />
+    <Compile Include="DuckTyping\ToTypeFromTypeTree.cs" />
+    <Compile Include="DuckTyping\TypeKey.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\DebuggingUtils.cs" />
     <Compile Include="PartMessage\CommonMessages.cs" />
