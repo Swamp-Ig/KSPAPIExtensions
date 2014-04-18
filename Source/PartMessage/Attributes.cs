@@ -14,32 +14,34 @@ namespace KSPAPIExtensions.PartMessage
     /// Apply this attribute to any method you wish to receive messages. 
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-    public class PartMessageListener : Attribute
+    public class PartMessageListener : Attribute, IPartMessageListenerV1
     {
-        public PartMessageListener(Type message, PartRelationship relations = PartRelationship.Self, GameSceneFilter scenes = GameSceneFilter.Any)
+        public PartMessageListener(Type delegateType, PartRelationship relations = PartRelationship.Self, GameSceneFilter scenes = GameSceneFilter.Any)
         {
-            if (message == null || !message.IsSubclassOf(typeof(Delegate)))
+            if (delegateType == null || !delegateType.IsSubclassOf(typeof(Delegate)))
                 throw new ArgumentException("Message is not a delegate type");
-            if (message.GetCustomAttributes(typeof(PartMessage), true).Length == 0)
-                throw new ArgumentException("Message does not have the PartMessage attribute");
+            if (delegateType.GetCustomAttributes(typeof(PartMessageDelegate), true).Length == 0)
+                throw new ArgumentException("Message does not have the PartMessageDelegate attribute");
 
-            this.message = message;
-            this.scenes = scenes;
-            this.relations = relations;
+            this.DelegateType = delegateType;
+            this.Scenes = scenes;
+            this.Relations = relations;
         }
 
         /// <summary>
         /// The delegate type that we are listening for.
         /// </summary>
-        public readonly Type message;
+        public Type DelegateType { get; private set; }
+
         /// <summary>
         /// Scene to listen for message in. Defaults to All.
         /// </summary>
-        public readonly GameSceneFilter scenes;
+        public GameSceneFilter Scenes { get; private set; }
+
         /// <summary>
         /// Filter for relation between the sender and the reciever.
         /// </summary>
-        public readonly PartRelationship relations;
+        public PartRelationship Relations { get; private set; }
     }
 
     /// <summary>
@@ -51,24 +53,24 @@ namespace KSPAPIExtensions.PartMessage
     }
 
     /// <summary>
-    /// The attribute to be applied to a delegate to mark it as a PartMessage type.
+    /// The attribute to be applied to a delegate to mark it as a PartMessageDelegate type.
     /// 
     /// To use the message, define an event within a Part or PartModule that uses this delegate.
     /// </summary>
     [AttributeUsage(AttributeTargets.Delegate)]
-    public class PartMessage : Attribute
+    public class PartMessageDelegate : Attribute, IPartMessageDelegateV1
     {
-        public PartMessage(Type parent = null, bool isAbstract = false)
+        public PartMessageDelegate(Type parent = null, bool isAbstract = false)
         {
             if (parent != null)
             {
                 if (!parent.IsSubclassOf(typeof(Delegate)))
                     throw new ArgumentException("Parent is not a delegate type");
-                if (parent.GetCustomAttributes(typeof(PartMessage), true).Length != 1)
-                    throw new ArgumentException("Parent does not have the PartMessage attribute");
+                if (parent.GetCustomAttributes(typeof(PartMessageDelegate), true).Length != 1)
+                    throw new ArgumentException("Parent does not have the PartMessageDelegate attribute");
             }
-            this.parent = parent;
-            this.isAbstract = isAbstract;
+            this.Parent = parent;
+            this.IsAbstract = isAbstract;
         }
 
         /// <summary>
@@ -77,35 +79,62 @@ namespace KSPAPIExtensions.PartMessage
         /// will also be notified. Note that the arguments in this situation are expected to be a truncation
         /// of the argument list for this event.
         /// </summary>
-        readonly public Type parent;
+        public Type Parent { get; private set; }
 
         /// <summary>
-        /// This event is considered abstract - it should not be send directly but should be sent from one of the child events.
+        /// This event is considered abstract - it should not be sent directly but should be sent from one of the child events.
         /// </summary>
-        readonly bool isAbstract;
+        public bool IsAbstract { get; private set; }
+    }
+
+    /// <summary>
+    /// Interface for a part message once it is passed into the system.
+    /// </summary>
+    public interface IPartMessage : IEnumerable<IPartMessage>
+    {
+        /// <summary>
+        /// String name of the part message. This will be equal to the FullName attibute of the delegate type.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// Delegate type of the message. <b>Note: do not rely on type equality with this attribute</b>. This is because
+        /// the source may be using a different assembly to the target.
+        /// </summary>
+        Type DelegateType { get; }
+
+        /// <summary>
+        /// Often there is a heirachy of events - with more specific events and encompasing general events.
+        /// Define a general event as the parent in this instance and any listeners to the general event
+        /// will also be notified. Note that the arguments in this situation are expected to be a truncation
+        /// of the argument list for this event.
+        /// </summary>
+        IPartMessage Parent { get; }
+
+        /// <summary>
+        /// This event is considered abstract - it should not be sent directly but should be sent from one of the child events.
+        /// </summary>
+        bool IsAbstract { get; }
     }
 
     /// <summary>
     /// Interface to implement on things that aren't either Parts or PartModules to enable them to send/recieve messages
     /// using the event system as a proxy for an actual part. This interface is not required, however if not implemented
-    /// the part recievers will not be able to filter by source.
-    /// You will need to call PartMessageFinder.ScanObject(object) in the Awake method or constructor.
+    /// the part recievers will not be able to filter by source relationship.
+    /// You will need to call PartMessageService.Register(object) in the Awake method or constructor.
     /// </summary>
     public interface PartMessagePartProxy
     {
-        Part proxyPart { get; }
+        Part ProxyPart { get; }
     }
 
     /// <summary>
     /// A filter method for outgoing messages. This is called prior to delivery of any messages. If the method returns true
     /// then the message is considered handled and will not be delivered.
     /// 
-    /// Information about the source of the message is avaiable from the ISourceInfo as usual.
+    /// Information about the source of the message is avaiable from the IMessageInfo as usual, this is passed as an argument for convenience.
     /// </summary>
-    /// <param name="source">The class where the event is defined</param>
-    /// <param name="message">The message being sent.</param>
-    /// <param name="args">Arguments to the event.</param>
     /// <returns>True if the message is considered handled and is not to be delivered.</returns>
-    public delegate bool PartMessageFilter(object source, Part part, Type message, object[] args);
+    public delegate bool PartMessageFilter(IMessageInfo message);
 
 }
