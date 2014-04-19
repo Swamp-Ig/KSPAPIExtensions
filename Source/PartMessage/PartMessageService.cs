@@ -12,10 +12,40 @@ using DeftTech.DuckTyping;
 namespace KSPAPIExtensions.PartMessage
 {
     /// <summary>
+    /// Interface for a part message once it is passed into the system.
+    /// </summary>
+    public interface IPartMessage : IEnumerable<IPartMessage>
+    {
+        /// <summary>
+        /// String name of the part message. This will be equal to the FullName attibute of the delegate type.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// Delegate type of the message. <b>Note: do not rely on type equality with this attribute</b>. This is because
+        /// the source may be using a different assembly to the target.
+        /// </summary>
+        Type DelegateType { get; }
+
+        /// <summary>
+        /// Often there is a heirachy of events - with more specific events and encompasing general events.
+        /// Define a general event as the parent in this instance and any listeners to the general event
+        /// will also be notified. Note that the arguments in this situation are expected to be a truncation
+        /// of the argument list for this event.
+        /// </summary>
+        IPartMessage Parent { get; }
+
+        /// <summary>
+        /// This event is considered abstract - it should not be sent directly but should be sent from one of the child events.
+        /// </summary>
+        bool IsAbstract { get; }
+    }
+
+    /// <summary>
     /// PartMessageListeners can use the properties in this class to examine details about the current message being
     /// handled
     /// </summary>
-    public interface IMessageInfo
+    public interface ICurrentEventInfo
     {
         /// <summary>
         /// The message
@@ -52,9 +82,9 @@ namespace KSPAPIExtensions.PartMessage
     public interface IPartMessageService
     {
         /// <summary>
-        /// MessageInfo for the current message being processed. This is used to get information about the current message source.
+        /// CurrentEventInfo for the current message being processed. This is used to get information about the current message source.
         /// </summary>
-        IMessageInfo MessageInfo { get; }
+        ICurrentEventInfo CurrentEventInfo { get; }
 
         /// <summary>
         /// Scan an object for events marked with <see cref="PartMessageEvent"/> and methods marked with <see cref="PartMessageListener"/> and hook them up.
@@ -107,7 +137,7 @@ namespace KSPAPIExtensions.PartMessage
         /// <param name="messages">Optional list of messages to match. If empty, all messages are matched.</param>
         /// <returns>Disposable object. When done call dispose. Works well with using clauses.</returns>
         IDisposable Filter(PartMessageFilter filter, object source = null, Part part = null, params Type[] messages);
-
+        
         /// <summary>
         /// Consolidate messages. All messages sent by the source will be held until the returned object is destroyed.
         /// Any duplicates of the same message and same arguments will be swallowed silently.
@@ -161,8 +191,10 @@ namespace KSPAPIExtensions.PartMessage
                     throw new InvalidProgramException("PartMessageService has not been initialized.");
 
                 foreach (Component comp in serviceGo.GetComponents<Component>())
-                    if (DuckTyping.CanCast<IPartMessageService>(comp))
+                {
+                    if (comp.GetType().FullName == typeof(ServiceImpl).FullName)
                         return _instance = DuckTyping.Cast<IPartMessageService>(comp);
+                }
 
                 throw new InvalidProgramException("Unable to find a compatible part message service from updated assembly. Something has gone very wrong.");
             }
@@ -173,13 +205,13 @@ namespace KSPAPIExtensions.PartMessage
         }
 
         /// <summary>
-        /// Convenience short-cut method for getting the current MessageInfo. This interface allows message listeners to find information about the sender.
+        /// Convenience short-cut method for getting the current CurrentEventInfo. This interface allows message listeners to find information about the sender.
         /// This object can be cached for later use, and will not update in future invocations.
         /// </summary>
         /// <exception cref="InvalidOperationException">If there is no current invocation occouring.</exception>
-        public static IMessageInfo MessageInfo
+        public static ICurrentEventInfo MessageInfo
         {
-            get { return Instance.MessageInfo; }
+            get { return Instance.CurrentEventInfo; }
         }
 
         /// <summary>

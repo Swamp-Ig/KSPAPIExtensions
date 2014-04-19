@@ -40,19 +40,19 @@ namespace KSPAPIExtensions.PartMessage
     }
     #endregion
 
-    #region Source Info
-    internal class MessageInfoImpl : IMessageInfo, IDisposable
+    #region Current Event Info
+    internal class CurrentEventInfoImpl : ICurrentEventInfo, IDisposable
     {
         #region Internal Bits
         [ThreadStatic]
-        internal static MessageInfoImpl current;
+        internal static CurrentEventInfoImpl current;
 
 #if DEBUG
         private bool onStack = false;
 #endif
-        private MessageInfoImpl previous;
+        private CurrentEventInfoImpl previous;
 
-        internal MessageInfoImpl(IPartMessage message, object source, Part part, object[] args)
+        internal CurrentEventInfoImpl(IPartMessage message, object source, Part part, object[] args)
         {
             Source = source;
             SourcePart = part;
@@ -86,11 +86,11 @@ namespace KSPAPIExtensions.PartMessage
         }
 
 #if DEBUG
-        ~MessageInfoImpl()
+        ~CurrentEventInfoImpl()
         {
             if (onStack)
             {
-                Debug.LogError("MessageInfoImpl somehow left on the call stack");
+                Debug.LogError("CurrentEventInfoImpl somehow left on the call stack");
             }
 
         }
@@ -117,16 +117,16 @@ namespace KSPAPIExtensions.PartMessage
 
         public override string ToString()
         {
-            return string.Format("MessageInfoImpl(Message:{0}, Source:{1}, SourcePart:{2}, Arguments.Length={3})", Message, Source, SourcePart, (Arguments == null) ? -1 : Arguments.Length);
+            return string.Format("CurrentEventInfoImpl(Message:{0}, Source:{1}, SourcePart:{2}, Arguments.Length={3})", Message, Source, SourcePart, (Arguments == null) ? -1 : Arguments.Length);
         }
         #endregion
     }
 
-    internal class MessageInfoCompare : IEqualityComparer<IMessageInfo>
+    internal class CurrentEventInfoCompare : IEqualityComparer<ICurrentEventInfo>
     {
-        public static MessageInfoCompare Instance = new MessageInfoCompare();
+        public static CurrentEventInfoCompare Instance = new CurrentEventInfoCompare();
 
-        public bool Equals(IMessageInfo x, IMessageInfo y)
+        public bool Equals(ICurrentEventInfo x, ICurrentEventInfo y)
         {
             if (x == y)
                 return true;
@@ -143,7 +143,7 @@ namespace KSPAPIExtensions.PartMessage
             return true;
         }
 
-        public int GetHashCode(IMessageInfo obj)
+        public int GetHashCode(ICurrentEventInfo obj)
         {
             if (obj == null)
                 return -1;
@@ -280,13 +280,13 @@ namespace KSPAPIExtensions.PartMessage
 
     internal class ServiceImpl : MonoBehaviour, IPartMessageService
     {
-        public IMessageInfo MessageInfo
+        public ICurrentEventInfo CurrentEventInfo
         {
             get {
-                if (MessageInfoImpl.current == null)
+                if (CurrentEventInfoImpl.current == null)
                     throw new InvalidOperationException("Cannot retrieve source info as not currently in invocation.");
 
-                return MessageInfoImpl.current; 
+                return CurrentEventInfoImpl.current;
             }
         }
 
@@ -378,7 +378,7 @@ namespace KSPAPIExtensions.PartMessage
                 }
             }
 
-            public bool CheckPrereq(IMessageInfo info)
+            public bool CheckPrereq(ICurrentEventInfo info)
             {
                 if (!attr.Scenes.IsLoaded())
                     return false;
@@ -471,11 +471,11 @@ namespace KSPAPIExtensions.PartMessage
         public void Send(Type messageCls, object source, Part part, params object[] args)
         {
             IPartMessage message = AsIPartMessage(messageCls);
-            MessageInfoImpl info = new MessageInfoImpl(message, source, part, args);
+            CurrentEventInfoImpl info = new CurrentEventInfoImpl(message, source, part, args);
             Send(info);
         }
 
-        internal void Send(MessageInfoImpl message)
+        internal void Send(CurrentEventInfoImpl message)
         {
             if (!gameObject)
                 return;
@@ -531,7 +531,7 @@ namespace KSPAPIExtensions.PartMessage
                         catch (TargetException ex)
                         {
                             // Swallow target exceptions, but not anything else.
-                            Debug.LogError(string.Format("Invoking {0}.{1} to handle DelegateType {2} resulted in an exception.", target.GetType(), node.Value.method, MessageInfo.Message));
+                            Debug.LogError(string.Format("Invoking {0}.{1} to handle DelegateType {2} resulted in an exception.", target.GetType(), node.Value.method, CurrentEventInfo.Message));
                             Debug.LogException(ex.InnerException);
                         }
 
@@ -635,7 +635,7 @@ namespace KSPAPIExtensions.PartMessage
 
             public LinkedListNode<FilterInfo> node;
 
-            public bool CheckPrereq(IMessageInfo info)
+            public bool CheckPrereq(ICurrentEventInfo info)
             {
                 if (this.source != null && this.source != info.Source)
                     return false;
@@ -677,13 +677,13 @@ namespace KSPAPIExtensions.PartMessage
                 this.Filter = ConsolidatingFilter;
             }
 
-            private HashSet<IMessageInfo> messageSet = new HashSet<IMessageInfo>(MessageInfoCompare.Instance);
-            private List<MessageInfoImpl> messageList = new List<MessageInfoImpl>();
+            private HashSet<ICurrentEventInfo> messageSet = new HashSet<ICurrentEventInfo>(CurrentEventInfoCompare.Instance);
+            private List<CurrentEventInfoImpl> messageList = new List<CurrentEventInfoImpl>();
 
-            private bool ConsolidatingFilter(IMessageInfo message)
+            private bool ConsolidatingFilter(ICurrentEventInfo message)
             {
                 if (messageSet.Add(message))
-                    messageList.Add((MessageInfoImpl)message);
+                    messageList.Add((CurrentEventInfoImpl)message);
                 return true;
             }
 
@@ -694,8 +694,8 @@ namespace KSPAPIExtensions.PartMessage
                 base.Dispose();
 
                 // Safe as we've already deregistered the filter, so no loops.
-                foreach (IMessageInfo message in messageList)
-                    service.Send((MessageInfoImpl)message);
+                foreach (ICurrentEventInfo message in messageList)
+                    service.Send((CurrentEventInfoImpl)message);
                 
                 messageSet = null;
                 messageList = null;

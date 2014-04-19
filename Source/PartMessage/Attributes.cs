@@ -88,36 +88,6 @@ namespace KSPAPIExtensions.PartMessage
     }
 
     /// <summary>
-    /// Interface for a part message once it is passed into the system.
-    /// </summary>
-    public interface IPartMessage : IEnumerable<IPartMessage>
-    {
-        /// <summary>
-        /// String name of the part message. This will be equal to the FullName attibute of the delegate type.
-        /// </summary>
-        string Name { get; }
-
-        /// <summary>
-        /// Delegate type of the message. <b>Note: do not rely on type equality with this attribute</b>. This is because
-        /// the source may be using a different assembly to the target.
-        /// </summary>
-        Type DelegateType { get; }
-
-        /// <summary>
-        /// Often there is a heirachy of events - with more specific events and encompasing general events.
-        /// Define a general event as the parent in this instance and any listeners to the general event
-        /// will also be notified. Note that the arguments in this situation are expected to be a truncation
-        /// of the argument list for this event.
-        /// </summary>
-        IPartMessage Parent { get; }
-
-        /// <summary>
-        /// This event is considered abstract - it should not be sent directly but should be sent from one of the child events.
-        /// </summary>
-        bool IsAbstract { get; }
-    }
-
-    /// <summary>
     /// Interface to implement on things that aren't either Parts or PartModules to enable them to send/recieve messages
     /// using the event system as a proxy for an actual part. This interface is not required, however if not implemented
     /// the part recievers will not be able to filter by source relationship.
@@ -132,9 +102,9 @@ namespace KSPAPIExtensions.PartMessage
     /// A filter method for outgoing messages. This is called prior to delivery of any messages. If the method returns true
     /// then the message is considered handled and will not be delivered.
     /// 
-    /// Information about the source of the message is avaiable from the IMessageInfo as usual, this is passed as an argument for convenience.
+    /// Information about the source of the message is avaiable from the ICurrentEventInfo as usual, this is passed as an argument for convenience.
     /// </summary>
     /// <returns>True if the message is considered handled and is not to be delivered.</returns>
-    public delegate bool PartMessageFilter(IMessageInfo message);
+    public delegate bool PartMessageFilter(ICurrentEventInfo message);
 
 }
