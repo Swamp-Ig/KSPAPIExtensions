@@ -72,4 +72,49 @@ namespace DeftTech.DuckTyping
             return duck;
         }
     }
+
+    /// <summary>
+    /// Duck casting strategy used to cast between enums with the same name.
+    /// </summary>
+    internal class EnumEnumDuckCaster : IDuckCaster
+    {
+        /// <summary>
+        /// Constructs an object.
+        /// </summary>
+        public EnumEnumDuckCaster()
+        { }
+
+        public bool ShouldCast(Type toType, Type fromType)
+        {
+            return toType.IsSubclassOf(typeof(Enum)) && fromType.IsSubclassOf(typeof(Enum));
+        }
+
+        public bool ShouldUncast(object duck)
+        {
+            return false;
+        }
+
+        public bool CanCast(Type toType, Type fromType)
+        {
+            return ShouldCast(toType, fromType) && toType.FullName == fromType.FullName;
+        }
+
+        public bool CouldUncast(Type originalType, Type castedType)
+        {
+            return CanCast(castedType, originalType);
+        }
+
+        public void PrepareCast(Type toType, Type fromType)
+        { }
+
+        public object Cast(Type toType, object duck)
+        {
+            return Enum.Parse(toType, duck.ToString());
+        }
+
+        public object Uncast(object duck)
+        {
+            return duck;
+        }
+    }
 }

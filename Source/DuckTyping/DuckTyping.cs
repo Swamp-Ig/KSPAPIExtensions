@@ -44,6 +44,7 @@ namespace DeftTech.DuckTyping
             s_DuckCasters.Add(new InterfaceDuckCaster());
             s_DuckCasters.Add(new DelegateDuckCaster());
             s_DuckCasters.Add(new EnumStringDuckCaster());
+            s_DuckCasters.Add(new EnumEnumDuckCaster());
             s_DuckCasters.Add(new GenericParameterDuckCaster());
 
             s_StaticDuckCasters = new List<IStaticDuckCaster>();
