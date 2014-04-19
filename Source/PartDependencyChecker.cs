@@ -39,7 +39,7 @@ namespace KSPAPIExtensions
                     string value = split.Trim();
                     if (!string.IsNullOrEmpty(value) && (value[0] == '!' ? assem.Contains(value.Substring(1).Trim()) : !assem.Contains(value)))
                     {
-                        Debug.Log("[PartMessageService] removing part " + partName + " due to dependency requirements not met");
+                        Debug.Log("[PartDependencyChecker] removing part " + partName + " due to dependency requirements not met");
                         part.ClearData();
                         return true;
                     }
