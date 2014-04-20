@@ -27,6 +27,7 @@ namespace KSPAPIExtensions
         public UIProgressSlider slider;
 
         private float value;
+        private uint controlState;
 
         public static UIPartActionFloatEdit CreateTemplate()
         {
@@ -131,15 +132,19 @@ namespace KSPAPIExtensions
         public override void Setup(UIPartActionWindow window, Part part, PartModule partModule, UI_Scene scene, UI_Control control, BaseField field)
         {
             base.Setup(window, part, partModule, scene, control, field);
-            incLargeDown.SetValueChangedDelegate(obj => IncrementValue(false, fieldInfo.incrementLarge));
-            incSmallDown.SetValueChangedDelegate(obj => IncrementValue(false, fieldInfo.incrementSmall));
-            incSmallUp.SetValueChangedDelegate(obj => IncrementValue(true, fieldInfo.incrementSmall));
-            incLargeUp.SetValueChangedDelegate(obj => IncrementValue(true, fieldInfo.incrementLarge));
-            slider.SetValueChangedDelegate(OnValueChanged);
+            incLargeDown.SetValueChangedDelegate(obj => buttons_ValueChanged(false, true));
+            incSmallDown.SetValueChangedDelegate(obj => buttons_ValueChanged(false, false));
+            incSmallUp.SetValueChangedDelegate(obj => buttons_ValueChanged(true, false));
+            incLargeUp.SetValueChangedDelegate(obj => buttons_ValueChanged(true, true));
+            slider.SetValueChangedDelegate(slider_OnValueChanged);
+
+            // so update runs.
+            this.value = GetFieldValue() * 2f;
         }
 
-        private void IncrementValue(bool up, float increment)
+        private void buttons_ValueChanged(bool up, bool large)
         {
+            float increment = (large ? fieldInfo.incrementLarge : fieldInfo.incrementSmall);
             float excess = value % increment;
             float newValue;
             if (up)
@@ -159,7 +164,7 @@ namespace KSPAPIExtensions
             SetNewValue(newValue);
         }
 
-        private void OnValueChanged(IUIObject obj)
+        private void slider_OnValueChanged(IUIObject obj)
         {
             float valueLow, valueHi;
             SliderRange(value, out valueLow, out valueHi);
@@ -187,7 +192,8 @@ namespace KSPAPIExtensions
             else if (newValue > fieldInfo.maxValue)
                 newValue = fieldInfo.maxValue;
 
-            value = newValue;
+            UpdateValueDisplay(newValue);
+
             field.SetValue(newValue, field.host);
             if (scene == UI_Scene.Editor)
                 SetSymCounterpartValue(newValue);
@@ -232,15 +238,35 @@ namespace KSPAPIExtensions
 
         public override void UpdateItem()
         {
-            value = GetFieldValue();
+            // update from fieldName. No listeners.
+            fieldName.Text = field.guiName;
 
+            // Update the value.
+            float value = GetFieldValue();
+            if (value != this.value)
+                UpdateValueDisplay(value);
+
+            uint newHash = fieldInfo.GetHashedState();
+            if (controlState != newHash)
+            {
+                UpdateFieldInfo();
+                controlState = newHash;
+            }
+        }
+
+        private void UpdateValueDisplay(float value)
+        {
+            this.value = value;
             if (fieldInfo.incrementSlide != 0)
                 value = Mathf.Round(value / fieldInfo.incrementSlide) * fieldInfo.incrementSlide;
 
             SetSliderValue(value);
 
             fieldValue.Text = value.ToStringExt(field.guiFormat) + field.guiUnits;
-            fieldName.Text = field.guiName;
+        }
+
+        private void UpdateFieldInfo()
+        {
             if (fieldInfo.incrementLarge == 0.0)
             {
                 incLargeDown.gameObject.SetActive(false);
@@ -291,19 +317,24 @@ namespace KSPAPIExtensions
                 slider.gameObject.SetActive(false);
             else
                 slider.gameObject.SetActive(true);
+
+            SetSliderValue(value);
         }
+
+
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field)]
     public class UI_FloatEdit : UI_Control
     {
+        private static string UIControlName = "UIPartActionFloatEdit";
+
         public float minValue = float.NegativeInfinity;
         public float maxValue = float.PositiveInfinity;
+
         public float incrementLarge = 0;
         public float incrementSmall = 0;
         public float incrementSlide = 0;
-
-        private static string UIControlName = "UIPartActionFloatEdit";
 
         public override void Load(ConfigNode node, object host)
         {
@@ -345,28 +376,12 @@ namespace KSPAPIExtensions
                 node.AddValue("incrementSlide", incrementSlide.ToString());
         }
 
-
-        /*
-        protected static bool ParseInt(out int value, ConfigNode node, string valueName, string FieldUIControlName, string errorNoValue)
+        internal unsafe uint GetHashedState()
         {
-            value = 0;
-            string value2 = node.GetValue(valueName);
-            if (value2 == null)
+            fixed (float* minValue = &this.minValue, maxValue = &this.maxValue, incrementLarge = &this.incrementLarge, incrementSmall = &this.incrementSmall, incrementSlide = &this.incrementSlide)
             {
-                if (errorNoValue != null)
-                {
-                    Debug.LogError("Error parsing" + FieldUIControlName + " " + errorNoValue);
-                }
-                return false;
+                return *((uint*)minValue) ^ *((uint*)maxValue) ^ *((uint*)incrementLarge) ^ *((uint*)incrementSmall) ^ *((uint*)incrementSlide);
             }
-            if (!int.TryParse(value2, out value))
-            {
-                Debug.LogError("Error parsing" + FieldUIControlName + " " + valueName);
-                return false;
-            }
-            return true;
         }
-         */
-
     }
 }
