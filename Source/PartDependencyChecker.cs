@@ -10,28 +10,48 @@ namespace KSPAPIExtensions
     internal class PartDependencyChecker : MonoBehaviour
     {
 
+        // Use the Update method to be sure this runs *after* module manager. (MM used OnGUI)
         internal void Update()
         {
-            // Do the requires thing. This needs to get moved to a different class.
-            HashSet<string> assem = new HashSet<string>();
-            foreach (var a in AssemblyLoader.loadedAssemblies)
-                assem.Add(a.assembly.GetName().Name);
+            // If we're not ready to run, return and wait for the next Update
+            if (!GameDatabase.Instance.IsReady() && !GameSceneFilter.AnyInitializing.IsLoaded())
+                return;
 
-            foreach (UrlDir.UrlConfig urlConf in GameDatabase.Instance.root.AllConfigs)
+            try
             {
-                if (urlConf.type != "PART")
-                    continue;
+                // Run the type election
+                if (!SystemUtils.RunTypeElection(typeof(PartDependencyChecker), "KSPAPIExtensions"))
+                    return;
 
-                ConfigNode part = urlConf.config;
-                if (CheckPartRequiresAssembly(assem, part))
-                    continue;
+                // Get a set of assemblies
+                HashSet<string> assem = new HashSet<string>();
+                foreach (var a in AssemblyLoader.loadedAssemblies)
+                    assem.Add(a.assembly.GetName().Name);
+
+                // Filter the parts list
+                foreach (UrlDir.UrlConfig urlConf in GameDatabase.Instance.root.GetConfigs("PART").ToArray())
+                {
+                    if (CheckPartRequiresAssembly(assem, urlConf.config))
+                    {
+                        Debug.Log("[PartDependencyChecker] removing part " + urlConf.name + " due to dependency requirements not met");
+                        urlConf.parent.configs.Remove(urlConf);
+                    }
+                    else
+                    {
+                        urlConf.config.RemoveValues("RequiresAssembly");
+                    }
+                }
+            }
+            finally
+            {
+                // Destroy ourself because there's no reason to still hang around
+                UnityEngine.Object.Destroy(gameObject);
+                enabled = false;
             }
         }
 
         private static bool CheckPartRequiresAssembly(HashSet<string> assem, ConfigNode part)
         {
-            string partName = part.GetValue("name");
-
             foreach (string keyValue in part.GetValues("RequiresAssembly"))
             {
                 foreach (string split in keyValue.Split(','))
@@ -39,14 +59,11 @@ namespace KSPAPIExtensions
                     string value = split.Trim();
                     if (!string.IsNullOrEmpty(value) && (value[0] == '!' ? assem.Contains(value.Substring(1).Trim()) : !assem.Contains(value)))
                     {
-                        Debug.Log("[PartDependencyChecker] removing part " + partName + " due to dependency requirements not met");
-                        part.ClearData();
                         return true;
                     }
                 }
             }
 
-            part.RemoveValues("RequiresAssembly");
             return false;
         }
     }

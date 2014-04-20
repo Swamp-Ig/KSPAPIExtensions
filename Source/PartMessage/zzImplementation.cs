@@ -767,63 +767,38 @@ namespace KSPAPIExtensions.PartMessage
     [KSPAddonFixed(KSPAddon.Startup.Instantly, false, typeof(PartMessageServiceInitializer))]
     internal class PartMessageServiceInitializer : MonoBehaviour
     {
-        internal void Update()
+        internal void Start()
         {
-            // Use the Update method to be sure this runs *after* module manager. (MM used OnGUI)
-
-            // If we're not ready to run, return and wait for the next Update
-            if (!GameDatabase.Instance.IsReady() && !GameSceneFilter.AnyInitializing.IsLoaded())
-                return;
-
-            // If we are loaded from the first loaded assembly that has this class, then we are responsible to destroy
-            var candidates = (from ass in AssemblyLoader.loadedAssemblies
-                              where ass.assembly.GetType(typeof(PartMessageService).FullName, false) != null
-                              orderby ass.assembly.GetName().Version descending, ass.path ascending
-                              select ass).ToArray();
-            var winner = candidates.First();
-
-            if (Assembly.GetExecutingAssembly() != winner.assembly)
+            try
             {
-                // We are not the winner, return.
+                if (!SystemUtils.RunTypeElection(typeof(PartMessageService), "KSPAPIExtensions"))
+                    return;
+
+                // So at this point we know we have won the election, and will be using the class versions as in this assembly.
+
+                // Destroy the old service
+                if (PartMessageService._instance != null)
+                {
+                    Debug.Log("[PartMessageService] destroying service from previous load");
+                    UnityEngine.Object.Destroy(((ServiceImpl)PartMessageService._instance).gameObject);
+                }
+
+                // Create the part message service
+                GameObject serviceGo = new GameObject(PartMessageService.partMessageServiceName);
+                UnityEngine.Object.DontDestroyOnLoad(serviceGo);
+
+                // Assign the service to the static variable
+                PartMessageService._instance = serviceGo.AddComponent<ServiceImpl>();
+
+                // At this point the losers will duck-type themselves to the latest version of the service if they're called.
+            }
+            finally
+            {
+                // Destroy ourself because there's no reason to still hang around
                 UnityEngine.Object.Destroy(gameObject);
                 enabled = false;
-                return;
             }
-
-            if (candidates.Length > 1)
-            {
-                string losers = string.Join("\n", (from t in candidates
-                                                   where t != winner
-                                                   select string.Format("Version: {0} Location: {1}", t.assembly.GetName().Version, t.path)).ToArray());
-
-                Debug.Log("[PartMessageService] version " + winner.assembly.GetName().Version + " at " + winner.path + " won the election against\n" + losers);
-            }
-            else
-                Debug.Log("[PartMessageService] Elected unopposed version= " + winner.assembly.GetName().Version + " at " + winner.path);
-
-            // So at this point we know we have won the election, and will be using the class versions as in this assembly.
-
-            // Destroy the old service
-            if (PartMessageService._instance != null)
-            {
-                Debug.Log("[PartMessageService] destroying service from previous load");
-                UnityEngine.Object.Destroy(((ServiceImpl)PartMessageService._instance).gameObject);
-            }
-
-            // Create the part message service
-            GameObject serviceGo = new GameObject(PartMessageService.partMessageServiceName);
-            UnityEngine.Object.DontDestroyOnLoad(serviceGo);
-
-            // Assign the service to the static variable
-            PartMessageService._instance = serviceGo.AddComponent<ServiceImpl>();
-
-            // At this point the losers will duck-type themselves to the latest version of the service if they're called.
-
-            // Destroy ourself because there's no reason to still hang around
-            UnityEngine.Object.Destroy(gameObject);
-            enabled = false;
         }
-
 
     }
     #endregion
