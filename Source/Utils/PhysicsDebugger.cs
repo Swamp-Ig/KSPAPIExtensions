@@ -32,20 +32,20 @@ namespace KSPAPIExtensions.DebuggingUtils
 
                 foreach (Part p in part.vessel.parts)
                 {
-                    sb.AppendLine(p.name + " position=" + rootT.InverseTransformPoint(p.transform.position).ToString("F5"));
+                    sb.AppendLine(p.name + " position(wrt root)=" + rootT.InverseTransformPoint(p.transform.position).ToString("F5"));
 
                     if (p.rigidbody != null)
                     {
                         massTotal += p.rigidbody.mass;
                         wtSum += p.rigidbody.mass * rootT.InverseTransformPoint(p.transform.TransformPoint(p.rigidbody.centerOfMass));
+                        sb.AppendLine(p.name + " mass=" + p.rigidbody.mass);
                         if (p.rigidbody.centerOfMass != Vector3.zero)
-                            sb.AppendLine(p.name + " CoM offset=" + rootT.InverseTransformDirection(p.transform.TransformDirection(p.rigidbody.centerOfMass)).ToString("F5"));
+                            sb.AppendLine(p.name + " CoM offset=" + p.rigidbody.centerOfMass.ToString("F5"));
                         sb.AppendLine(p.name + " inertia tensor=" + p.rigidbody.inertiaTensor.ToString("F5") + " rotation=" + p.rigidbody.inertiaTensorRotation.ToStringAngleAxis("F5"));
 
-                        Joint j = p.gameObject.GetComponent<Joint>();
-                        if (j != null)
+                        foreach(Joint j in p.gameObject.GetComponents<Joint>())
                         {
-                            sb.AppendLine(p.name + " joint type=" + j.GetType() + " position=" + rootT.InverseTransformDirection(p.transform.TransformDirection(j.anchor)).ToString("F5") + " force=" + j.breakForce + " torque=" + j.breakTorque);
+                            sb.AppendLine(p.name + " joint type=" + j.GetType() + " position=" + j.anchor.ToString("F5") + " force=" + j.breakForce + " torque=" + j.breakTorque);
                         }
                     }
 
@@ -54,7 +54,7 @@ namespace KSPAPIExtensions.DebuggingUtils
                         ModuleEngines mE = (ModuleEngines)p.Modules["ModuleEngines"];
                         foreach (Transform t in mE.thrustTransforms)
                         {
-                            sb.AppendLine(p.name + " thrust transform position=" + rootT.InverseTransformPoint(t.position).ToString("F5"));
+                            sb.AppendLine(p.name + " thrust transform position=" + t.position.ToString("F5"));
                         }
                     }
                 }
