@@ -111,7 +111,7 @@ namespace KSPAPIExtensions
 
             SIPrefix prefix = resource.maxAmount.GetSIPrefix();
             resource.amount = prefix.Round((double)slider.Value * this.resource.maxAmount, sigFigs:4);
-            PartMessageService.Send<PartResourceInitialAmountChanged>(this, part, resource);
+            PartMessageService.Send<PartResourceInitialAmountChanged>(this, part, resource.name, resource.amount);
             if (this.scene == UI_Scene.Editor)
                 SetSymCounterpartsAmount(resource.amount);
         }
@@ -127,7 +127,7 @@ namespace KSPAPIExtensions
                     continue;
                 PartResource symResource = sym.Resources[resource.info.name];
                 symResource.amount = amount;
-                PartMessageService.Send<PartResourceInitialAmountChanged>(this, sym, symResource);
+                PartMessageService.Send<PartResourceInitialAmountChanged>(this, sym, symResource.name, symResource.amount);
             }
 	    }
 

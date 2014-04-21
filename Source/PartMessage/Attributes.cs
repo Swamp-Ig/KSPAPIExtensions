@@ -88,6 +88,19 @@ namespace KSPAPIExtensions.PartMessage
     }
 
     /// <summary>
+    /// If the message as defined in a <see cref="PartMessageDelegate"/> is idempotent, or partially idempotent, then mark 
+    /// any arguments or the whole delegate with this attribute.
+    /// 
+    /// In essence: There's no point updating the part's mass three times in a row, you only need to know about the most recent.
+    /// If you're using <see cref="IPartMessageService.Consolidate"/> then any messages with everything else the same except for the
+    /// mass will be consolidated together if the mass is marked with [UseLatest] in the delegate.
+    /// 
+    /// Note that listeners do not need to use this attribute in their argument list.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Parameter)]
+    public class UseLatest : Attribute { }
+
+    /// <summary>
     /// Interface to implement on things that aren't either Parts or PartModules to enable them to send/recieve messages
     /// using the event system as a proxy for an actual part. This interface is not required, however if not implemented
     /// the part recievers will not be able to filter by source relationship.

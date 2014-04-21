@@ -58,6 +58,19 @@ namespace KSPAPIExtensions.PartMessage
             SourcePart = part;
             Message = message;
             Arguments = args;
+
+            List<object> identityArgs = new List<object>();
+            ParameterInfo [] paramInfos = message.DelegateType.GetMethod("Invoke").GetParameters();
+            for(int i = 0; i < paramInfos.Length; ++i)
+            {
+                foreach(Attribute attr in paramInfos[i].GetCustomAttributes(false))
+                    if(attr.GetType().FullName == typeof(UseLatest).FullName)
+                        goto foundAttr;
+                identityArgs.Add(args[i]);
+            foundAttr:
+                ;
+            }
+            IdentArguments = identityArgs.AsReadOnly();
         }
 
         internal IDisposable Push()
@@ -108,6 +121,8 @@ namespace KSPAPIExtensions.PartMessage
 
         public object[] Arguments { get; private set; }
 
+        public IEnumerable<object> IdentArguments { get; private set; }
+
         public PartModule SourceModule { get { return Source as PartModule; } }
 
         public PartRelationship SourceRelationTo(Part destPart)
@@ -119,44 +134,50 @@ namespace KSPAPIExtensions.PartMessage
         {
             return string.Format("CurrentEventInfoImpl(Message:{0}, Source:{1}, SourcePart:{2}, Arguments.Length={3})", Message, Source, SourcePart, (Arguments == null) ? -1 : Arguments.Length);
         }
-        #endregion
-    }
 
-    internal class CurrentEventInfoCompare : IEqualityComparer<ICurrentEventInfo>
-    {
-        public static CurrentEventInfoCompare Instance = new CurrentEventInfoCompare();
-
-        public bool Equals(ICurrentEventInfo x, ICurrentEventInfo y)
+        public bool Equals(ICurrentEventInfo other)
         {
-            if (x == y)
+            if (other == null)
+                return false;
+            if (this == other)
                 return true;
 
-            if (x.Source != y.Source)
+            if (GetHashCode() != other.GetHashCode())
                 return false;
-            if (x.Message.Name != y.Message.Name)
+
+            if (this.Source != other.Source)
                 return false;
-            if (x.Arguments.Length != y.Arguments.Length)
+            if (this.Message.Name != other.Message.Name)
                 return false;
-            for (int i = 0; i < x.Arguments.Length; i++)
-                if (!x.Arguments[i].Equals(y.Arguments[i]))
-                    return false;
+            if (!IdentArguments.SequenceEqual(other.IdentArguments))
+                return false;
             return true;
         }
 
-        public int GetHashCode(ICurrentEventInfo obj)
+        public override bool Equals(object obj)
         {
-            if (obj == null)
-                return -1;
+            return Equals(obj as ICurrentEventInfo);
+        }
 
-            int hashCode =
-                obj.Source.GetHashCode()
-                ^ ((obj.SourcePart == null) ? 0 : obj.SourcePart.GetHashCode())
-                ^ obj.Message.Name.GetHashCode()
-                ^ obj.Arguments.Length;
-            foreach (object arg in obj.Arguments)
+        private int hashCode;
+
+        public override int GetHashCode()
+        {
+            if (hashCode != 0)
+                return hashCode;
+
+            hashCode =
+                this.Source.GetHashCode()
+                ^ ((this.SourcePart == null) ? 0 : this.SourcePart.GetHashCode())
+                ^ this.Message.Name.GetHashCode()
+                ^ this.Arguments.Length;
+            foreach (object arg in IdentArguments)
                 hashCode ^= (arg == null ? 0 : arg.GetHashCode());
             return hashCode;
         }
+
+        #endregion
+
     }
 
     #endregion
@@ -677,27 +698,24 @@ namespace KSPAPIExtensions.PartMessage
                 this.Filter = ConsolidatingFilter;
             }
 
-            private HashSet<ICurrentEventInfo> messageSet = new HashSet<ICurrentEventInfo>(CurrentEventInfoCompare.Instance);
-            private List<CurrentEventInfoImpl> messageList = new List<CurrentEventInfoImpl>();
+            private LinkedList<ICurrentEventInfo> messageList = new LinkedList<ICurrentEventInfo>();
 
             private bool ConsolidatingFilter(ICurrentEventInfo message)
             {
-                if (messageSet.Add(message))
-                    messageList.Add((CurrentEventInfoImpl)message);
+                // Remove any matching previous
+                messageList.RemoveAll(evt => evt.Equals(message));
+                messageList.AddLast((CurrentEventInfoImpl)message);
                 return true;
             }
 
             public override void Dispose()
             {
                 ServiceImpl service = this.service;
-
                 base.Dispose();
 
                 // Safe as we've already deregistered the filter, so no loops.
                 foreach (ICurrentEventInfo message in messageList)
-                    service.Send((CurrentEventInfoImpl)message);
-                
-                messageSet = null;
+                    service.Send((CurrentEventInfoImpl)message);                
                 messageList = null;
             }
 

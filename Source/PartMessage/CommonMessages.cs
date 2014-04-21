@@ -21,19 +21,19 @@ namespace KSPAPIExtensions.PartMessage
     /// Message for when the part's mass is modified.
     /// </summary>
     [PartMessageDelegate(typeof(PartPhysicsChanged))]
-    public delegate void PartMassChanged();
+    public delegate void PartMassChanged([UseLatest] float mass);
 
     /// <summary>
     /// Message for when the part's CoMOffset changes.
     /// </summary>
     [PartMessageDelegate(typeof(PartPhysicsChanged))]
-    public delegate void PartCoMOffsetChanged();
+    public delegate void PartCoMOffsetChanged([UseLatest] Vector3 offset);
 
     /// <summary>
     /// Message for when the part's moments of intertia change.
     /// </summary>
     [PartMessageDelegate(typeof(PartPhysicsChanged))]
-    public delegate void PartMomentsChanged();
+    public delegate void PartMomentsChanged([UseLatest] Vector3 intertiaTensor, [UseLatest] Quaternion intertiaTensorRotation);
 
 
     /// <summary>
@@ -52,13 +52,13 @@ namespace KSPAPIExtensions.PartMessage
     /// Message for when the max amount of a resource is modified.
     /// </summary>
     [PartMessageDelegate(typeof(PartResourcesChanged))]
-    public delegate void PartResourceMaxAmountChanged(PartResource resource);
+    public delegate void PartResourceMaxAmountChanged(string resource, [UseLatest] double maxAmount);
 
     /// <summary>
     /// Message for when the initial amount of a resource is modified (only raised in the editor)
     /// </summary>
     [PartMessageDelegate(typeof(PartResourcesChanged))]
-    public delegate void PartResourceInitialAmountChanged(PartResource resource);
+    public delegate void PartResourceInitialAmountChanged(string resource, [UseLatest] double amount);
 
     /// <summary>
     /// Message for when some change has been made to the part's rendering model.

@@ -45,7 +45,7 @@ namespace KSPAPIExtensions.PartMessage
     /// PartMessageListeners can use the properties in this class to examine details about the current message being
     /// handled
     /// </summary>
-    public interface ICurrentEventInfo
+    public interface ICurrentEventInfo : IEquatable<ICurrentEventInfo>
     {
         /// <summary>
         /// The message
@@ -71,6 +71,11 @@ namespace KSPAPIExtensions.PartMessage
         /// The arguments to the current event. Treat as unmodifiable.
         /// </summary>
         object[] Arguments { get; }
+
+        /// <summary>
+        /// The arguments that are used when determining event equality. This is any arguments not explicitly marked with <see cref="UseLatest"/>
+        /// </summary>
+        IEnumerable<object> IdentArguments { get; }
 
         /// <summary>
         /// Find relationship between the message source and the specified part.

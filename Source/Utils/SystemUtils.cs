@@ -50,5 +50,31 @@ namespace KSPAPIExtensions
 
             return true;
         }
+
+        public static LinkedListNode<T> FindFirstNode<T>(this LinkedList<T> list, Predicate<T> match)
+        {
+            for (var node = list.First; node != null; node = node.Next)
+                if(match(node.Value))
+                    return node;
+            return null;
+        }
+
+        public static int RemoveAll<T>(this LinkedList<T> list, Predicate<T> match)
+        {
+            int count = 0;
+            for (var node = list.First; node != null; )
+            {
+                if (!match(node.Value))
+                {
+                    node = node.Next;
+                    continue;
+                }
+                ++count;
+                var tmp = node;
+                node = node.Next;
+                list.Remove(tmp);
+            }
+            return count;
+        }
     }
 }
