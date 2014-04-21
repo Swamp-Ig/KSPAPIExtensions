@@ -54,6 +54,7 @@
     <Compile Include="DuckTyping\ToTypeFromTypeTree.cs" />
     <Compile Include="DuckTyping\TypeKey.cs" />
     <Compile Include="PartDependencyChecker.cs" />
+    <Compile Include="Utils\EngineWrapper.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\DebuggingUtils.cs" />
     <Compile Include="PartMessage\CommonMessages.cs" />
