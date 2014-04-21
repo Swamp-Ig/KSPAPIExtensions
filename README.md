@@ -114,6 +114,22 @@ There's also a set of common messages defined, so addon builders can send and li
 
 Once again, to use these you *must* include the KSIAPIUtils.dll in your project rather than just copying the code as there's an election process to ensure the latest version is being run. If backwards compatibility breaks, I will ensure that the user is warned to upgrade plugins.
 
+## Initialization of message system
+
+Any class or module that uses part messages must initialize the system. The easiest way is like this:
+
+````c#
+    public abstract class ProceduralAbstractShape : PartModule
+    {
+        public override void OnAwake()
+        {
+            base.OnAwake();
+            PartMessageService.Register(this);
+        }
+````
+
+You need to do this in OnAwake, as the part variable needs to be initialized.
+
 ## Part messages
 
 Event types are declared as delegates with a special marker interface:
@@ -122,8 +138,8 @@ Event types are declared as delegates with a special marker interface:
     [PartMessage(isAbstract: true)]
     public delegate void PartPhysicsChanged();
 
-    [PartMessage(typeof(PartPhysicsChanged))]
-    public delegate void PartMassChanged();
+    [PartMessageDelegate(typeof(PartPhysicsChanged))]
+    public delegate void PartMassChanged([UseLatest] float mass);
 ````
 
 These two events are in the common library. There's no constraints on the argument list, however you do not need to have the sending part as an argument as that is handled.
@@ -131,6 +147,15 @@ These two events are in the common library. There's no constraints on the argume
 Note that the PartMassChanged message has a parent event - PartPhysicsChanged. If you ever raise a PartMassChanged message then any listeners for PartPhysicsChanged will also be informed. The isAbstract flag indicates this should not be sent directly as an event. Currently this is not enforced but may be in the future.
 
 The argument list for any parent should either be the same, or a truncation of the list for the child event. Truncation is handled gracefully.
+
+Note the [UseLatest] attribute for the PartMassChanged event. This indicates that if a whole pile of PartMassChanged events gets sent from the same source that differ only in their mass arguments, then these can be consolidated into one event where the mass is the last one recieved. 
+
+````c#
+    [PartMessageDelegate(typeof(PartResourcesChanged))]
+    public delegate void PartResourceMaxAmountChanged(string resource, [UseLatest] double maxAmount);
+````
+
+Above is an example of where this is not the case, the resource name uniquely identifies a message, however multiple messages with the same source but differ only in the maxAmount can be consolidated.
 
 ## Message sending
 
@@ -143,7 +168,7 @@ In your PartModule and Part objects, you can just declare and use an event like 
 	private void UpdateMass(float value) 
 	{
 		part.mass = mass;
-		MassChanged();
+		MassChanged(mass);
 	}
 ````
 
@@ -166,4 +191,4 @@ Note the two optional filtering properties.
 
 ## Advanced message management
 
-You can filter messages, buffer them up and send them in one hit, and send them dynamically. I won't go into the full details in this document.
+You can filter messages, buffer them up and send them in one hit, and send them dynamically. I won't go into the full details in this document. Have a look at the source for more details.
