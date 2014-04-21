@@ -79,7 +79,7 @@ namespace KSPAPIExtensions
 
         internal static string FormatSI(this SIPrefix pfx, double value, int sigFigs = 3, int exponent = 0, string unit = null)
         {
-            return string.Format("{0} {1}{2}", pfx.GetFormatter(value, sigFigs, exponent)(value), pfx.PrefixString(), unit);
+            return string.Format("{0}{1}{2}", pfx.GetFormatter(value, sigFigs, exponent)(value), pfx.PrefixString(), unit);
         }
 
         /// <summary>
