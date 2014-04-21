@@ -42,6 +42,7 @@ namespace KSPAPIExtensions
         Credits = 1 << (int)GameScenes.CREDITS,
 
         AnyEditor = VAB | SPH, 
+        AnyEditorOrFlight = AnyEditor | Flight,
         AnyInitializing = 0xFFFF & ~(AnyEditor | Flight), 
         Any = 0xFFFF
     }

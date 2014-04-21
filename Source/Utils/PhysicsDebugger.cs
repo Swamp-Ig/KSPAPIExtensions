@@ -13,9 +13,11 @@ namespace KSPAPIExtensions.DebuggingUtils
     /// </summary>
     public class ModulePhysicsDebugger : PartModule
     {
+
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Physics Debugger")]
         private double lastFixedUpdate;
 
-        public override void OnFixedUpdate()
+        public void FixedUpdate()
         {
             if (HighLogic.LoadedSceneIsFlight && (Time.time - lastFixedUpdate) > 10)
             {
@@ -43,7 +45,7 @@ namespace KSPAPIExtensions.DebuggingUtils
                         Joint j = p.gameObject.GetComponent<Joint>();
                         if (j != null)
                         {
-                            sb.AppendLine(p.name + " joint  type=" + j.GetType() + "position=" + rootT.InverseTransformDirection(p.transform.TransformDirection(j.anchor)).ToString("F5") + " force=" + j.breakForce + " torque=" + j.breakTorque);
+                            sb.AppendLine(p.name + " joint type=" + j.GetType() + " position=" + rootT.InverseTransformDirection(p.transform.TransformDirection(j.anchor)).ToString("F5") + " force=" + j.breakForce + " torque=" + j.breakTorque);
                         }
                     }
 
