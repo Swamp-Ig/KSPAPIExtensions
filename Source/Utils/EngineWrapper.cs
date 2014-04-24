@@ -17,7 +17,6 @@ namespace KSPAPIExtensions.Utils
         private ModuleType type;
         private ModuleEngines mE;
         private ModuleEnginesFX mEFX;
-        private ModuleRCS mRCS;
 
         public EngineWrapper(Part part)
         {
@@ -25,8 +24,6 @@ namespace KSPAPIExtensions.Utils
                 type = ModuleType.MODULEENGINESFX;
             else if ((mE = part.transform.GetComponent<ModuleEngines>()) != null)
                 type = ModuleType.MODULEENGINES;
-            //else if ((mRCS = part.transform.GetComponent<ModuleRCS>()) != null)
-            //    type = ModuleType.MODULERCS;
             else
                 throw new ArgumentException("Unable to find engine-like module");
         }
@@ -56,11 +53,6 @@ namespace KSPAPIExtensions.Utils
         public static explicit operator ModuleEnginesFX(EngineWrapper wrapper)
         {
             return wrapper.mEFX;
-        }
-
-        public static explicit operator ModuleRCS(EngineWrapper wrapper)
-        {
-            return wrapper.mRCS;
         }
 
         public ModuleType Type { get { return type; } }
