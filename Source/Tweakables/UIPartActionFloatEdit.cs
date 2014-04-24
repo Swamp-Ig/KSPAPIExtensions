@@ -140,6 +140,7 @@ namespace KSPAPIExtensions
 
             // so update runs.
             this.value = GetFieldValue() * 2f;
+            UpdateFieldInfo();
         }
 
         private void buttons_ValueChanged(bool up, bool large)
