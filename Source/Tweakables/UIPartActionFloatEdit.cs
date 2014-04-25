@@ -139,7 +139,7 @@ namespace KSPAPIExtensions
             slider.SetValueChangedDelegate(slider_OnValueChanged);
 
             // so update runs.
-            this.value = GetFieldValue() * 2f;
+            this.value = GetFieldValue() + 0.1f;
             UpdateFieldInfo();
         }
 
@@ -162,7 +162,7 @@ namespace KSPAPIExtensions
                 else
                     newValue = value - excess;
             }
-            SetNewValue(newValue);
+            SetValueFromGUI(newValue);
         }
 
         private void slider_OnValueChanged(IUIObject obj)
@@ -172,7 +172,7 @@ namespace KSPAPIExtensions
 
             float newValue = Mathf.Lerp(valueLow, valueHi, slider.Value);
 
-            if (fieldInfo.incrementLarge == 0) 
+            if (fieldInfo.incrementLarge == 0 || valueHi == fieldInfo.maxValue) 
             {
                 if (newValue > valueHi)
                     newValue = valueHi;
@@ -180,10 +180,10 @@ namespace KSPAPIExtensions
             else if (newValue > valueHi - fieldInfo.incrementSlide)
                 newValue = valueHi - fieldInfo.incrementSlide;
 
-            SetNewValue(newValue);
+            SetValueFromGUI(newValue);
         }
 
-        private void SetNewValue(float newValue)
+        private void SetValueFromGUI(float newValue)
         {
             if (fieldInfo.incrementSlide != 0)
                 newValue = Mathf.Round(newValue / fieldInfo.incrementSlide) * fieldInfo.incrementSlide;
@@ -200,13 +200,6 @@ namespace KSPAPIExtensions
                 SetSymCounterpartValue(newValue);
         }
 
-        private void SetSliderValue(float value)
-        {
-            float valueLow, valueHi;
-            SliderRange(value, out valueLow, out valueHi);
-            slider.Value = Mathf.InverseLerp(valueLow, valueHi, value);
-        }
-
         private void SliderRange(float value, out float valueLow, out float valueHi)
         {
             if (fieldInfo.incrementLarge == 0)
@@ -220,11 +213,21 @@ namespace KSPAPIExtensions
             {
                 valueLow = Mathf.Floor((value + fieldInfo.incrementSlide / 2f) / fieldInfo.incrementLarge) * fieldInfo.incrementLarge;
                 valueHi = valueLow + fieldInfo.incrementLarge;
+                if (valueLow == fieldInfo.maxValue)
+                {
+                    valueHi = valueLow;
+                    valueLow -= fieldInfo.incrementLarge;
+                }
             }
             else
             {
                 valueLow = Mathf.Floor((value + fieldInfo.incrementSlide / 2f) / fieldInfo.incrementSmall) * fieldInfo.incrementSmall;
                 valueHi = valueLow + fieldInfo.incrementSmall;
+                if (valueLow == fieldInfo.maxValue)
+                {
+                    valueHi = valueLow;
+                    valueLow -= fieldInfo.incrementSmall;
+                }
             }
         }
 
@@ -261,7 +264,9 @@ namespace KSPAPIExtensions
             if (fieldInfo.incrementSlide != 0)
                 value = Mathf.Round(value / fieldInfo.incrementSlide) * fieldInfo.incrementSlide;
 
-            SetSliderValue(value);
+            float valueLow, valueHi;
+            SliderRange(value, out valueLow, out valueHi);
+            slider.Value = Mathf.InverseLerp(valueLow, valueHi, value);
 
             fieldValue.Text = value.ToStringExt(field.guiFormat) + field.guiUnits;
         }
@@ -318,11 +323,7 @@ namespace KSPAPIExtensions
                 slider.gameObject.SetActive(false);
             else
                 slider.gameObject.SetActive(true);
-
-            SetSliderValue(value);
         }
-
-
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field)]
