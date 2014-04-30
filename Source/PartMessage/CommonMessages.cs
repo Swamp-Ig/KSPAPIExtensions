@@ -116,4 +116,29 @@ namespace KSPAPIExtensions.PartMessage
     /// </summary>
     [PartMessageDelegate]
     public delegate void PartColliderChanged();
+
+    /// <summary>
+    /// There has been some change to the part heirachy.
+    /// </summary>
+    [PartMessageDelegate(isAbstract:true)]
+    public delegate void PartHeirachyChanged();
+
+    /// <summary>
+    /// The parent of this part has changed. Note: this is automatically invoked by the framework, so you don't ever need to raise the event.
+    /// </summary>
+    /// <param name="parent">New parent, or null if it has been detached.</param>
+    [PartMessageDelegate(typeof(PartHeirachyChanged))]
+    public delegate void PartParentChanged([UseLatest] Part parent);
+
+    /// <summary>
+    /// New child has been attached to this part. Note: this is automatically invoked by the framework, so you don't ever need to raise the event.
+    /// </summary>
+    [PartMessageDelegate(typeof(PartHeirachyChanged))]
+    public delegate void PartChildAttached(Part child);
+
+    /// <summary>
+    /// Child part has been detached from this part. Note: this is automatically invoked by the framework, so you don't ever need to raise the event.
+    /// </summary>
+    [PartMessageDelegate(typeof(PartHeirachyChanged))]
+    public delegate void PartChildDetached(Part child);
 }

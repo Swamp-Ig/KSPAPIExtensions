@@ -724,20 +724,43 @@ namespace KSPAPIExtensions.PartMessage
 
         #region Startup
 
-        private EventData<GameScenes>.OnEvent sceneChangedListener;
-
         internal void Awake() 
         {
             // Clear the listeners list when reloaded.
-            sceneChangedListener = scene => listeners.Clear();
-            GameEvents.onGameSceneLoadRequested.Add(sceneChangedListener);
+            GameEvents.onGameSceneLoadRequested.Add(SceneLoadedListener);
+            GameEvents.onPartAttach.Add(OnPartAttach);
+            GameEvents.onPartRemove.Add(OnPartRemove);
         }
 
         internal void OnDestroy()
         {
-            GameEvents.onGameSceneLoadRequested.Remove(sceneChangedListener);
-            sceneChangedListener = null;
+            GameEvents.onGameSceneLoadRequested.Remove(SceneLoadedListener);
+            GameEvents.onPartAttach.Remove(OnPartAttach);
+            GameEvents.onPartRemove.Remove(OnPartRemove);
             listeners = null;
+        }
+
+        private void SceneLoadedListener(GameScenes scene)
+        {
+            listeners.Clear();
+        }
+
+        private void OnPartAttach(GameEvents.HostTargetAction<Part, Part> data)
+        {
+            // Target is the parent, host is the child part
+            Send<PartParentChanged>(this, data.host, data.target);
+            Send<PartChildAttached>(this, data.target, data.host);
+        }
+
+        private void OnPartRemove(GameEvents.HostTargetAction<Part, Part> data)
+        {
+            // host is null, target is the child part. 
+            Send<PartParentChanged>(this, data.target, new object[] { null });
+            Send<PartChildDetached>(this, data.target.parent, data.target);
+
+            if (data.target.attachMode == AttachModes.SRF_ATTACH)
+                data.target.srfAttachNode.attachedPart = null;
+
         }
 
         #endregion
