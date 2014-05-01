@@ -102,6 +102,7 @@ namespace KSPAPIExtensions.PartMessage
         /// <summary>
         /// Send a message. Normally this will be automatically invoked by the event, but there are types when dynamic invocation is required.
         /// </summary>
+        /// <typeparam name="T">Message type. This must be a delegate type marked with the PartMessageDelegate attribute.</typeparam>
         /// <param name="source">Source of the message. If this is a Part, a PartModule, or a PartMessagePartProxy the source part will be discovered.</param>
         /// <param name="args">message arguments</param>
         void Send<T>(object source, params object[] args);
@@ -118,10 +119,11 @@ namespace KSPAPIExtensions.PartMessage
         /// Send a message. Normally this will be automatically invoked by the event, but there are types when dynamic invocation is required.
         /// This version allows the source to proxy for some other part.
         /// </summary>
+        /// <typeparam name="T">Message type. This must be a delegate type marked with the PartMessageDelegate attribute.</typeparam>
         /// <param name="source">Source of the message. This may be any object. This variant does <b>not</b> do automatic part discovery.</param>
         /// <param name="part">Part that the message source is proxying for</param>
         /// <param name="args">message arguments</param>
-        void Send<T>(object source, Part part, params object[] args);
+        void SendProxy<T>(object source, Part part, params object[] args);
 
         /// <summary>
         /// Send a message. Normally this will be automatically invoked by the event, but there are types when dynamic invocation is required.
@@ -131,7 +133,49 @@ namespace KSPAPIExtensions.PartMessage
         /// <param name="source">Source of the message. This may be any object. This variant does <b>not</b> do automatic part discovery.</param>
         /// <param name="part">Part that the message source is proxying for</param>
         /// <param name="args">message arguments</param>
-        void Send(Type message, object source, Part part, params object[] args);
+        void SendProxy(Type message, object source, Part part, params object[] args);
+
+        /// <summary>
+        /// Send a message. Normally this will be automatically invoked by the event, but there are types when dynamic invocation is required.
+        /// This version of the method will send the message asynchonously - the message will be delivered in the next update frame. Any message filters will
+        /// be invoked prior to returning.
+        /// </summary>
+        /// <typeparam name="T">Message type. This must be a delegate type marked with the PartMessageDelegate attribute.</typeparam>
+        /// <param name="source">Source of the message. If this is a Part, a PartModule, or a PartMessagePartProxy the source part will be discovered.</param>
+        /// <param name="args">message arguments</param>
+        void SendAsync<T>(object source, params object[] args);
+
+        /// <summary>
+        /// Send a message. Normally this will be automatically invoked by the event, but there are types when dynamic invocation is required.
+        /// This version of the method will send the message asynchonously - the message will be delivered in the next update frame. Any message filters will
+        /// be invoked prior to returning.
+        /// </summary>
+        /// <param name="message">The message delegate type. This must have the PartMessageDelegate attribute.</param>
+        /// <param name="source">Source of the message. If this is a Part, a PartModule, or a PartMessagePartProxy the source part will be discovered.</param>
+        /// <param name="args">message arguments</param>
+        void SendAsync(Type message, object source, params object[] args);
+
+        /// <summary>
+        /// Send a message. Normally this will be automatically invoked by the event, but there are types when dynamic invocation is required.
+        /// This version of the method will send the message asynchonously - the message will be delivered in the next update frame. Any message filters will
+        /// be invoked prior to returning.
+        /// </summary>
+        /// <typeparam name="T">Message type. This must be a delegate type marked with the PartMessageDelegate attribute.</typeparam>
+        /// <param name="source">Source of the message. This may be any object. This variant does <b>not</b> do automatic part discovery.</param>
+        /// <param name="part">Part that the message source is proxying for</param>
+        /// <param name="args">message arguments</param>
+        void SendAsyncProxy<T>(object source, Part part, params object[] args);
+
+        /// <summary>
+        /// Send a message. Normally this will be automatically invoked by the event, but there are types when dynamic invocation is required.
+        /// This version of the method will send the message asynchonously - the message will be delivered in the next update frame. Any message filters will
+        /// be invoked prior to returning.
+        /// </summary>
+        /// <param name="message">The message delegate type. This must have the PartMessageDelegate attribute.</param>
+        /// <param name="source">Source of the message. This may be any object. This variant does <b>not</b> do automatic part discovery.</param>
+        /// <param name="part">Part that the message source is proxying for</param>
+        /// <param name="args">message arguments</param>
+        void SendAsyncProxy(Type message, object source, Part part, params object[] args);
 
         /// <summary>
         /// Register a message filter. This delegate will be called for every message sent from the source.
@@ -243,7 +287,7 @@ namespace KSPAPIExtensions.PartMessage
         /// <param name="args">message arguments</param>
         public static void Send<T>(object source, Part part, params object[] args)
         {
-            Instance.Send<T>(source, part, args);
+            Instance.SendProxy<T>(source, part, args);
         }
     }
 }

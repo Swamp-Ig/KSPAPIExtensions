@@ -38,6 +38,17 @@ namespace KSPAPIExtensions.PartMessage
 
         bool IsAbstract { get; }
     }
+
+    /// <summary>
+    /// Interface to allow duck casting of messages.
+    /// 
+    /// <b>Do not change this interface or duck casting will fail.</b>
+    /// </summary>
+    internal interface IPartMessageEventV1
+    {
+        bool IsAsync { get; }
+    }
+
     #endregion
 
     #region Current Event Info
@@ -51,6 +62,7 @@ namespace KSPAPIExtensions.PartMessage
         private bool onStack = false;
 #endif
         private CurrentEventInfoImpl previous;
+        internal bool filterComplete = false;
 
         internal CurrentEventInfoImpl(IPartMessage message, object source, Part part, object[] args)
         {
@@ -205,7 +217,7 @@ namespace KSPAPIExtensions.PartMessage
             foundAttribute:
             DelegateType = message;
 
-            ifMsg = DuckTyping.Cast<IPartMessageDelegateV1>(attribute);
+            ifMsg = ServiceImpl.AsDelegate(attribute);
             if(ifMsg.Parent != null)
                 parent = (MessageImpl)service.AsIPartMessage(ifMsg.Parent);
         }
@@ -330,9 +342,11 @@ namespace KSPAPIExtensions.PartMessage
 
             foreach (EventInfo evt in objType.GetEvents(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             {
+                bool async;
                 foreach (object attr in evt.GetCustomAttributes(true))
                     if (attr.GetType().FullName == typeof(PartMessageEvent).FullName)
                     {
+                        async = AsEvent(attr).IsAsync;
                         goto foundEvent;
                     }
                 continue;
@@ -341,8 +355,8 @@ namespace KSPAPIExtensions.PartMessage
                 Type deleg = evt.EventHandlerType;
 
                 // sanity check
-                foreach (object attr in evt.GetCustomAttributes(true))
-                    if (attr.GetType().FullName == typeof(PartMessageEvent).FullName)
+                foreach (object attr in deleg.GetCustomAttributes(true))
+                    if (attr.GetType().FullName == typeof(PartMessageDelegate).FullName)
                     {
                         goto checkedDelegate;
                     }
@@ -351,15 +365,25 @@ namespace KSPAPIExtensions.PartMessage
                 continue;
 
             checkedDelegate:
-                GenerateEventHandoff(obj, evt);
+                GenerateEventHandoff(async, obj, evt);
             }
         }
 
-        private IPartMessageListenerV1 AsListener(object obj) 
+        internal static IPartMessageEventV1 AsEvent(object attr)
         {
-            // TODO: We may want to do something clever with this in the future...
-            return DuckTyping.Cast<IPartMessageListenerV1>(obj);
+            return DuckTyping.Cast<IPartMessageEventV1>(attr);
         }
+
+        internal static IPartMessageListenerV1 AsListener(object attr) 
+        {
+            return DuckTyping.Cast<IPartMessageListenerV1>(attr);
+        }
+
+        internal static IPartMessageDelegateV1 AsDelegate(Attribute attribute)
+        {
+            return DuckTyping.Cast<IPartMessageDelegateV1>(attribute);
+        }
+
         #endregion
 
         #region Listeners and Event Delegates
@@ -438,9 +462,10 @@ namespace KSPAPIExtensions.PartMessage
             info.node = listenerList.AddLast(info);
         }
 
-        private static readonly MethodInfo handoffSend = typeof(ServiceImpl).GetMethod("Send", BindingFlags.Instance | BindingFlags.Public, null, new Type[] { typeof(Type), typeof(object), typeof(Part), typeof(object[]) }, null);
+        private static readonly MethodInfo handoffSend = typeof(ServiceImpl).GetMethod("SendProxy", BindingFlags.Instance | BindingFlags.Public, null, new Type[] { typeof(Type), typeof(object), typeof(Part), typeof(object[]) }, null);
+        private static readonly MethodInfo handoffSendAsync = typeof(ServiceImpl).GetMethod("SendAsyncProxy", BindingFlags.Instance | BindingFlags.Public, null, new Type[] { typeof(Type), typeof(object), typeof(Part), typeof(object[]) }, null);
 
-        private void GenerateEventHandoff(object source, EventInfo evt)
+        private void GenerateEventHandoff(bool async, object source, EventInfo evt)
         {
             MethodAttributes addAttrs = evt.GetAddMethod(true).Attributes;
             Part part = AsPart(source);
@@ -461,7 +486,7 @@ namespace KSPAPIExtensions.PartMessage
             }
             Expression createArr = Expression.NewArrayInit(typeof(object), cvrt);
 
-            Expression invoke = Expression.Call(Expression.Constant(this), handoffSend,
+            Expression invoke = Expression.Call(Expression.Constant(this), async?handoffSendAsync:handoffSend,
                 Expression.Constant(message), Expression.Constant(source), Expression.Constant(part), createArr);
 
             Delegate d = Expression.Lambda(message, invoke, peLst).Compile();
@@ -474,26 +499,80 @@ namespace KSPAPIExtensions.PartMessage
 
         #region Message delivery
 
+        private LinkedList<CurrentEventInfoImpl> asyncMessages = new LinkedList<CurrentEventInfoImpl>();
+
         public void Send<T>(object source, params object[] args)
         {
-            Send(typeof(T), source, AsPart(source), args);
+            SendProxy(typeof(T), source, AsPart(source), args);
         }
 
         public void Send(Type message, object source, params object[] args)
         {
-            Send(message, source, AsPart(source), args);
+            SendProxy(message, source, AsPart(source), args);
         }
 
-        public void Send<T>(object source, Part part, params object[] args)
+        public void SendProxy<T>(object source, Part part, params object[] args)
         {
-            Send(typeof(T), source, part, args);
+            SendProxy(typeof(T), source, part, args);
         }
 
-        public void Send(Type messageCls, object source, Part part, params object[] args)
+        public void SendProxy(Type messageCls, object source, Part part, params object[] args)
         {
             IPartMessage message = AsIPartMessage(messageCls);
             CurrentEventInfoImpl info = new CurrentEventInfoImpl(message, source, part, args);
             Send(info);
+        }
+
+        public void SendAsync<T>(object source, params object[] args)
+        {
+            SendAsyncProxy(typeof(T), source, AsPart(source), args);
+        }
+
+        public void SendAsync(Type message, object source, params object[] args)
+        {
+            SendAsyncProxy(message, source, AsPart(source), args);
+        }
+
+        public void SendAsyncProxy<T>(object source, Part part, params object[] args)
+        {
+            SendAsyncProxy(typeof(T), source, part, args);
+        }
+
+        public void SendAsyncProxy(Type messageCls, object source, Part part, params object[] args) 
+        {
+            CurrentEventInfoImpl message = new CurrentEventInfoImpl(AsIPartMessage(messageCls), source, part, args);
+
+            // Eat duplicate messages, just send the last one.
+            var node = asyncMessages.First;
+            while (node != null)
+            {
+                if (node.Value.Equals(message))
+                {
+                    var delete = node;
+                    node = node.Next;
+                    asyncMessages.Remove(delete);
+                }
+                else
+                    node = node.Next;
+            }
+
+            using (message.Push())
+            {
+                if (filters != null)
+                    foreach (FilterInfo info in filters)
+                        if (info.CheckPrereq(message) && info.Filter(message))
+                            return;
+            }
+            message.filterComplete = true;
+
+            asyncMessages.AddLast(message);
+        }
+
+        private void Update()
+        {
+            foreach (CurrentEventInfoImpl message in asyncMessages)
+                Send(message);
+            asyncMessages.Clear();
         }
 
         internal void Send(CurrentEventInfoImpl message)
@@ -503,7 +582,7 @@ namespace KSPAPIExtensions.PartMessage
 
             using (message.Push())
             {
-                if (filters != null)
+                if (!message.filterComplete && filters != null)
                     foreach (FilterInfo info in filters)
                         if (info.CheckPrereq(message) && info.Filter(message))
                             return;
@@ -715,7 +794,11 @@ namespace KSPAPIExtensions.PartMessage
 
                 // Safe as we've already deregistered the filter, so no loops.
                 foreach (ICurrentEventInfo message in messageList)
-                    service.Send((CurrentEventInfoImpl)message);                
+                {
+                    CurrentEventInfoImpl info = (CurrentEventInfoImpl)message;
+                    info.filterComplete = false;
+                    service.Send((CurrentEventInfoImpl)message);
+                }
                 messageList = null;
             }
 
@@ -748,15 +831,15 @@ namespace KSPAPIExtensions.PartMessage
         private void OnPartAttach(GameEvents.HostTargetAction<Part, Part> data)
         {
             // Target is the parent, host is the child part
-            Send<PartParentChanged>(this, data.host, data.target);
-            Send<PartChildAttached>(this, data.target, data.host);
+            SendAsyncProxy<PartParentChanged>(this, data.host, data.target);
+            SendAsyncProxy<PartChildAttached>(this, data.target, data.host);
         }
 
         private void OnPartRemove(GameEvents.HostTargetAction<Part, Part> data)
         {
             // host is null, target is the child part. 
-            Send<PartParentChanged>(this, data.target, new object[] { null });
-            Send<PartChildDetached>(this, data.target.parent, data.target);
+            SendAsyncProxy<PartParentChanged>(this, data.target, new object[] { null });
+            SendAsyncProxy<PartChildDetached>(this, data.target.parent, data.target);
 
             if (data.target.attachMode == AttachModes.SRF_ATTACH)
                 data.target.srfAttachNode.attachedPart = null;

@@ -48,8 +48,27 @@ namespace KSPAPIExtensions.PartMessage
     /// Marker attribute to apply to events using part messages.
     /// </summary>
     [AttributeUsage(AttributeTargets.Event)]
-    public class PartMessageEvent : Attribute
+    public class PartMessageEvent : Attribute, IPartMessageEventV1
     {
+        /// <summary>
+        /// Constructor for attribute.
+        /// </summary>
+        /// <param name="isAsync">If this is true then the event will be raised asynchonously. Any message filters will be called immediatly,
+        /// then the message will be delivered in the next update frame.</param>
+        public PartMessageEvent(bool isAsync = false)
+        {
+            IsAsync = isAsync;
+        }
+
+        /// <summary>
+        /// If this is true then the event will be raised asynchonously. Any message filters will be called immediatly,
+        /// then the message will be delivered in the next update frame.
+        /// </summary>
+        public bool IsAsync
+        {
+            get;
+            private set;
+        }
     }
 
     /// <summary>
