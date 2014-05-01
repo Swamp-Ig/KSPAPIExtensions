@@ -570,9 +570,19 @@ namespace KSPAPIExtensions.PartMessage
 
         private void Update()
         {
-            foreach (CurrentEventInfoImpl message in asyncMessages)
-                Send(message);
-            asyncMessages.Clear();
+            while (asyncMessages.Count > 0)
+            {
+                CurrentEventInfoImpl message = asyncMessages.First.Value;
+                asyncMessages.RemoveFirst();
+                try
+                {
+                    Send(message);
+                }
+                catch(Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
+            }
         }
 
         internal void Send(CurrentEventInfoImpl message)
@@ -833,6 +843,22 @@ namespace KSPAPIExtensions.PartMessage
             // Target is the parent, host is the child part
             SendAsyncProxy<PartParentChanged>(this, data.host, data.target);
             SendAsyncProxy<PartChildAttached>(this, data.target, data.host);
+
+            if (data.host == data.host.GetSymmetryCloneOriginal())
+                return;
+
+            // The clones won't have had either of the above listeners called for any of their children
+            PartAttachSymmetry(data.host);
+        }
+
+        private void PartAttachSymmetry(Part thisPart)
+        {
+            foreach (Part child in thisPart.children)
+            {
+                SendAsyncProxy<PartParentChanged>(this, child, thisPart);
+                SendAsyncProxy<PartChildAttached>(this, thisPart, child);
+                PartAttachSymmetry(child);
+            }
         }
 
         private void OnPartRemove(GameEvents.HostTargetAction<Part, Part> data)
