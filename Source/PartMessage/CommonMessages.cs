@@ -72,7 +72,7 @@ namespace KSPAPIExtensions.PartMessage
     /// <param name="area">Area in square meters of the attachment. </param>
     /// <param name="size">Attach node 'size' an integer value as per <see cref="AttachNode"/></param>
     [PartMessageDelegate(typeof(PartAttachNodeChanged))]
-    public delegate void PartAttachNodeSizeChanged(AttachNode node, [UseLatest] float minDia, [UseLatest] float area, [UseLatest] int size);
+    public delegate void PartAttachNodeSizeChanged(AttachNode node, [UseLatest] float minDia, [UseLatest] float area);
 
     /// <summary>
     /// Location or orientation of the attachment node is changed
