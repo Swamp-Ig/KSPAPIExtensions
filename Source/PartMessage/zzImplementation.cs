@@ -913,7 +913,7 @@ namespace KSPAPIExtensions.PartMessage
         #endregion
     }
 
-    #region Initialization
+    #region Initialization and Other Mod Interfacing
     [KSPAddonFixed(KSPAddon.Startup.Instantly, false, typeof(PartMessageServiceInitializer))]
     internal class PartMessageServiceInitializer : MonoBehaviour
     {
@@ -941,6 +941,8 @@ namespace KSPAPIExtensions.PartMessage
                 PartMessageService._instance = serviceGo.AddComponent<ServiceImpl>();
 
                 // At this point the losers will duck-type themselves to the latest version of the service if they're called.
+
+                ListenerFerramAerospaceResearch.AddListener(serviceGo);
             }
             finally
             {
@@ -949,8 +951,59 @@ namespace KSPAPIExtensions.PartMessage
                 enabled = false;
             }
         }
-
     }
+
+    internal class ListenerFerramAerospaceResearch : MonoBehaviour
+    {
+        private static Action<Part> SetBasicDragModuleProperties;
+
+        public static void AddListener(GameObject serviceGo)
+        {
+            Type typeFARAeroUtil = Type.GetType("ferram4.FARAeroUtil", false);
+            if (typeFARAeroUtil == null)
+                return;
+
+            MethodInfo info = typeFARAeroUtil.GetMethod("SetBasicDragModuleProperties", new Type[] { typeof(Part) });
+
+            if (info == null)
+            {
+                Debug.LogWarning("[PartMessageService] FAR update method seems to have changed. Cannot interface with FAR.");
+                return;
+            }
+
+            SetBasicDragModuleProperties = (Action<Part>)Delegate.CreateDelegate(typeFARAeroUtil, info);
+
+            serviceGo.AddComponent<ListenerFerramAerospaceResearch>();
+        }
+
+        private IPartMessageService service;
+
+        private void Awake()
+        {
+            service = PartMessageService.Instance;
+            GameEvents.onGameSceneLoadRequested.Add(GameSceneLoaded);
+        }
+
+        private void GameSceneLoaded(GameScenes data)
+        {
+            if(!GameSceneFilter.AnyEditorOrFlight.IsLoaded())
+                return;
+
+            PartMessageService.Register(this);
+        }
+
+        [PartMessageListener(typeof(PartModelChanged), relations:PartRelationship.Unknown, scenes: GameSceneFilter.AnyEditorOrFlight)]
+        private void PartModelChanged()
+        {
+            Part part = service.CurrentEventInfo.SourcePart;
+            if (part == null)
+                return;
+
+            SetBasicDragModuleProperties(part);
+        }
+    }
+
+
     #endregion
 
     #region Message Enumerator
