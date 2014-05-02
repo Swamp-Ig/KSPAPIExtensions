@@ -34,7 +34,7 @@ namespace KSPAPIExtensions
                               select ass).ToArray();
             var winner = candidates.First();
 
-            if (Assembly.GetExecutingAssembly() != winner.assembly)
+            if (targetCls.Assembly != winner.assembly)
                 return false;
 
             if (candidates.Length > 1)
