@@ -157,3 +157,4 @@ $RECYCLE.BIN/
 .DS_Store
 
 Source/ProceduralTanks/someGuff.txt
+Source/Properties/AssemblyInfo.cs
