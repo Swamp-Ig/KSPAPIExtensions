@@ -22,7 +22,10 @@ namespace KSPAPIExtensions
         Parent = 0x40,
         Sibling = 0x80,
         Unrelated = 0x100,
-        Unknown = 0x0
+        Unknown = 0x0,
+
+        AnyOnVessel = Vessel | Self | Symmetry | Decendent | Child | Ancestor | Parent | Sibling,
+        AnyPart = AnyOnVessel | Unrelated,
     }
 
     /// <summary>
@@ -56,9 +59,14 @@ namespace KSPAPIExtensions
         /// </summary>
         public static UIPartActionWindow FindActionWindow(this Part part)
         {
+            if (part == null)
+                return null;
+
             // We need to do quite a bit of piss-farting about with reflection to 
-            // dig the thing out.
+            // dig the thing out. We could just use Object.Find, but that requires hitting a heap more objects.
             UIPartActionController controller = UIPartActionController.Instance;
+            if (controller == null)
+                return null;
 
             if (windowListField == null)
             {
