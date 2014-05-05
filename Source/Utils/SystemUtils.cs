@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -75,6 +76,20 @@ namespace KSPAPIExtensions
                 list.Remove(tmp);
             }
             return count;
+        }
+
+        public static bool TryGet<K, T>(this KeyedCollection<K, T> coll, K key, out T value)
+        {
+            try
+            {
+                value = coll[key];
+                return true;
+            }
+            catch (KeyNotFoundException)
+            {
+                value = default(T);
+                return false;
+            }
         }
     }
 }
