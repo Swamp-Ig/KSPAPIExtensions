@@ -86,15 +86,16 @@ namespace KSPAPIExtensions
         /// This extension of the standard string format method has available an extra standard format.
         ///
         /// Examples:
-        /// 12.ToStringExt("S") -> "12"
-        /// 12.ToStringExt("S3") -> "12.0"
-        /// 120.ToStringExt("S3") -> "120"
-        /// 1254.ToStringExt("S3") -> "1250"  (4 digit numbers do not use k as a special case)
-        /// 12540.ToStringExt("S3") -> "1.25 k"  (using SI prefixes)
-        /// 12540.ToStringExt("S4") -> "1.254 k"  (more significant figures)
-        /// (1.254).ToStringExt("S4+3") -> "1.254 k"  (+3 means the 'natural prefix' is k)
-        /// (1.254).ToStringExt("S4-3") -> "1.254 m"  (-3 means the 'natural prefix' is m)
-        /// 
+        /// <list type="bullet">
+        /// <item>12.ToStringExt("S") -> "12"</item>
+        /// <item>12.ToStringExt("S3") -> "12.0"</item>
+        /// <item>120.ToStringExt("S3") -> "120"</item>
+        /// <item>1254.ToStringExt("S3") -> "1250"  (4 digit numbers do not use k as a special case)</item>
+        /// <item>12540.ToStringExt("S3") -> "1.25k"  (using SI prefixes)</item>
+        /// <item>12540.ToStringExt("S4") -> "1.254k"  (more significant figures)</item>
+        /// <item>(1.254).ToStringExt("S4+3") -> "1.254k"  (+3 means the 'natural prefix' is k)</item>
+        /// <item>(1.254).ToStringExt("S4-3") -> "1.254m"  (-3 means the 'natural prefix' is m)</item>
+        /// </list>
         /// </summary>
         public static string ToStringExt(this double value, string format)
         {
@@ -126,6 +127,88 @@ namespace KSPAPIExtensions
         public static string ToStringExt(this float value, string format)
         {
             return ToStringExt((double)value, format);
+        }
+
+        /// <summary>
+        /// Parse a string in SI format - with SI unit prefix to a double.
+        /// Note - units must not be present.
+        /// </summary>
+        public static bool TryParseExt(string str, out double value)
+        {
+            str = str.Trim();
+            if(str.Length == 0) {
+                value = 0;
+                return false;
+            }
+
+            char last = str[str.Length - 1];
+
+            if (char.IsDigit(last))
+                return double.TryParse(str, out value);
+
+            double exponent;
+            int newLen = str.Length - 1;
+            switch (last)
+            {
+                case 'k': exponent = 1e3; break;
+                case 'M': exponent = 1e6; break;
+                case 'G': exponent = 1e9; break;
+                case 'T': exponent = 1e12; break;
+                case 'P': exponent = 1e15; break;
+                case 'E': exponent = 1e18; break;
+                case 'Z': exponent = 1e21; break;
+                case 'Y': exponent = 1e24; break;
+                case 'm': 
+                    exponent = 1e-3; break;
+                case '\x3bc': 
+                case '\xb5':
+                case 'u':
+                    exponent = 1e-6; break;
+                case 'c':
+                    if (!str.EndsWith("mic"))
+                    {
+                        value = 0;
+                        return false;
+                    }
+                    newLen = str.Length - 3;
+                    exponent = 1e-6;
+                    break;
+                case 'n': exponent = 1e-9; break;
+                case 'p': exponent = 1e-12; break;
+                case 'f': exponent = 1e-15; break;
+                case 'a': exponent = 1e-18; break;
+                case 'z': exponent = 1e-21; break;
+                case 'y': exponent = 1e-24; break;
+                default:
+                    value = 0;
+                    return false;
+            }
+
+            double parsed;
+            if (!double.TryParse(str.Substring(0, newLen), out parsed))
+            {
+                value = 0;
+                return false;
+            }
+
+            value = parsed * exponent;
+            return true;
+        }
+
+        /// <summary>
+        /// Parse a string in SI format - with SI unit prefix to a float.
+        /// Note - units must not be present.
+        /// </summary>
+        public static bool TryParseExt(string str, out float value)
+        {
+            double dVal;
+            if (TryParseExt(str, out dVal))
+            {
+                value = (float)dVal;
+                return true;
+            }
+            value = 0;
+            return false;
         }
 
         /// <summary>
@@ -199,7 +282,7 @@ namespace KSPAPIExtensions
                 case SIPrefix.Zotta: return "Z";
                 case SIPrefix.Yotta: return "Y";
                 case SIPrefix.Milli: return "m";
-                case SIPrefix.Micro: return "mic";
+                case SIPrefix.Micro: return "u";
                 case SIPrefix.Nano: return "n";
                 case SIPrefix.Pico: return "p";
                 case SIPrefix.Femto: return "f";
