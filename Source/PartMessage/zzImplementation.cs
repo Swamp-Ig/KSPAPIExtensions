@@ -103,11 +103,11 @@ namespace KSPAPIExtensions.PartMessage
 #if DEBUG
             if (!onStack)
                 throw new InvalidProgramException("Disposed called when not on the stack.");
+            onStack = false;
 #endif
 
             current = previous;
             previous = null;
-            onStack = false;
         }
 
 #if DEBUG
