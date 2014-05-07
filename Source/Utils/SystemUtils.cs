@@ -92,4 +92,46 @@ namespace KSPAPIExtensions
             }
         }
     }
+
+    public class OrderedDictionary<K, T> : KeyedCollection<K, T>
+    {
+        private Func<T, K> GetKey;
+
+        public OrderedDictionary(Func<T, K> GetKey)
+            : base()
+        {
+            this.GetKey = GetKey;
+        }
+
+        public OrderedDictionary(Func<T, K> GetKey, IEqualityComparer<K> comparer)
+            : base(comparer)
+        {
+            this.GetKey = GetKey;
+        }
+
+        public OrderedDictionary(Func<T, K> GetKey, IEqualityComparer<K> comparer, int dictionaryCreationThreshold)
+            : base(comparer, dictionaryCreationThreshold)
+        {
+            this.GetKey = GetKey;
+        }
+
+        protected override K GetKeyForItem(T item)
+        {
+            return GetKey(item);
+        }
+
+        public bool TryGet(K key, out T value)
+        {
+            try
+            {
+                value = this[key];
+                return true;
+            }
+            catch (KeyNotFoundException)
+            {
+                value = default(T);
+                return false;
+            }
+        }
+    }
 }
