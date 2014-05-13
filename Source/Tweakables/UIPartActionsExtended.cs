@@ -12,17 +12,37 @@ namespace KSPAPIExtensions
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     internal class UIPartActionsExtendedEditorRegistrationAddon : MonoBehaviour
     {
+        private static bool loadedInScene = false;
+
         public void Start()
         {
+            if (loadedInScene)
+                return;
+            loadedInScene = true;
             UIPartActionsExtendedRegistration.Register();
+        }
+
+        public void Update()
+        {
+            loadedInScene = false;
         }
     }
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     internal class UIPartActionsExtendedFlightRegistrationAddon : MonoBehaviour
     {
+        private static bool loadedInScene = false;
+
         public void Start()
         {
+            if (loadedInScene)
+                return;
+            loadedInScene = true;
             UIPartActionsExtendedRegistration.Register();
+        }
+
+        public void Update()
+        {
+            loadedInScene = false;
         }
     }
 
@@ -66,7 +86,7 @@ namespace KSPAPIExtensions
             fieldPrefabTypes.Add(typeof(UI_ChooseOption));
 
             // Register the label and resource editor fields. This should only be done by the most recent version.
-            if (GameSceneFilter.AnyEditor.IsLoaded() && (master ?? (master = CheckMaster())).Value)
+            if (GameSceneFilter.AnyEditor.IsLoaded() && master.Value)
             {
                 int idx = controller.fieldPrefabs.FindIndex(item => item.GetType() == typeof(UIPartActionLabel));
                 controller.fieldPrefabs[idx] = UIPartActionLabelImproved.CreateTemplate((UIPartActionLabel)controller.fieldPrefabs[idx]);
