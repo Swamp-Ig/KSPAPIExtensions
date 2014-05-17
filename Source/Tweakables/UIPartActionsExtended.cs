@@ -17,14 +17,19 @@ namespace KSPAPIExtensions
         public void Start()
         {
             if (loadedInScene)
+            {
+                Destroy(gameObject);
                 return;
+            }
             loadedInScene = true;
+
             UIPartActionsExtendedRegistration.Register();
         }
 
         public void Update()
         {
             loadedInScene = false;
+            Destroy(gameObject);
         }
     }
     [KSPAddon(KSPAddon.Startup.Flight, false)]
@@ -35,14 +40,19 @@ namespace KSPAPIExtensions
         public void Start()
         {
             if (loadedInScene)
+            {
+                Destroy(gameObject);
                 return;
+            }
             loadedInScene = true;
+
             UIPartActionsExtendedRegistration.Register();
         }
 
         public void Update()
         {
             loadedInScene = false;
+            Destroy(gameObject);
         }
     }
 

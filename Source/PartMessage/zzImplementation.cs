@@ -917,39 +917,48 @@ namespace KSPAPIExtensions.PartMessage
     [KSPAddonFixed(KSPAddon.Startup.Instantly, false, typeof(PartMessageServiceInitializer))]
     internal class PartMessageServiceInitializer : MonoBehaviour
     {
-        internal void Start()
+        private static bool loadedInScene = false;
+
+        internal void Awake()
         {
-            try
+            // Ensure that only one copy of the service is run per scene change.
+            if (loadedInScene)
             {
-                if (!SystemUtils.RunTypeElection(typeof(PartMessageService), "KSPAPIExtensions"))
-                    return;
-
-                // So at this point we know we have won the election, and will be using the class versions as in this assembly.
-
-                // Destroy the old service
-                if (PartMessageService._instance != null)
-                {
-                    Debug.Log("[PartMessageService] destroying service from previous load");
-                    UnityEngine.Object.Destroy(((ServiceImpl)PartMessageService._instance).gameObject);
-                }
-
-                // Create the part message service
-                GameObject serviceGo = new GameObject(PartMessageService.partMessageServiceName);
-                UnityEngine.Object.DontDestroyOnLoad(serviceGo);
-
-                // Assign the service to the static variable
-                PartMessageService._instance = serviceGo.AddComponent<ServiceImpl>();
-
-                // At this point the losers will duck-type themselves to the latest version of the service if they're called.
-
-                ListenerFerramAerospaceResearch.AddListener(serviceGo);
+                Assembly currentAssembly = Assembly.GetExecutingAssembly();
+                Debug.Log("[PartMessageService] Multiple copies of current version. Using the first copy. Version: " + currentAssembly.GetName().Version);
+                Destroy(gameObject);
+                return;
             }
-            finally
+            loadedInScene = true;
+            
+            if (!SystemUtils.RunTypeElection(typeof(PartMessageService), "KSPAPIExtensions"))
+                return;
+
+            // So at this point we know we have won the election, and will be using the class versions as in this assembly.
+
+            // Destroy the old service
+            if (PartMessageService._instance != null)
             {
-                // Destroy ourself because there's no reason to still hang around
-                UnityEngine.Object.Destroy(gameObject);
-                enabled = false;
+                Debug.Log("[PartMessageService] destroying service from previous load");
+                UnityEngine.Object.Destroy(((ServiceImpl)PartMessageService._instance).gameObject);
             }
+
+            // Create the part message service
+            GameObject serviceGo = new GameObject(PartMessageService.partMessageServiceName);
+            UnityEngine.Object.DontDestroyOnLoad(serviceGo);
+
+            // Assign the service to the static variable
+            PartMessageService._instance = serviceGo.AddComponent<ServiceImpl>();
+
+            // At this point the losers will duck-type themselves to the latest version of the service if they're called.
+
+            ListenerFerramAerospaceResearch.AddListener(serviceGo);
+        }
+
+        public void Update()
+        {
+            loadedInScene = false;
+            Destroy(gameObject);
         }
     }
 
