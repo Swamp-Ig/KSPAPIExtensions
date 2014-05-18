@@ -91,6 +91,27 @@ namespace KSPAPIExtensions
                 return false;
             }
         }
+
+        /// <summary>
+        /// Retrieve the most informative version string available in the given assembly.
+        /// </summary>
+        /// <param name="assembly">The assembly from which to retrieve the version string</param>
+        /// <returns>The version string from AssemblyInformationalVersionAttribute if available, otherwise from AssemblyVersion.</returns>
+        public static string GetAssemblyVersionString (Assembly assembly)
+        {
+            string version = assembly.GetName().Version.ToString ();
+
+            var cattrs = assembly.GetCustomAttributes(true);
+            foreach (var attr in cattrs) {
+                if (attr is AssemblyInformationalVersionAttribute) {
+                    var ver = attr as AssemblyInformationalVersionAttribute;
+                    version = ver.InformationalVersion;
+                    break;
+                }
+            }
+
+            return version;
+        }
     }
 
     public class OrderedDictionary<K, T> : KeyedCollection<K, T>
