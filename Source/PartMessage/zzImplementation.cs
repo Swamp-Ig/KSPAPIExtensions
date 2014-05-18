@@ -845,6 +845,9 @@ namespace KSPAPIExtensions.PartMessage
 
         private void OnInputLocksModified(GameEvents.FromToAction<ControlTypes, ControlTypes> data)
         {
+            if (!HighLogic.LoadedSceneIsEditor)
+                return;
+
             var ship = EditorLogic.fetch.ship;
 
             if (ship.parts.Count > 0)
