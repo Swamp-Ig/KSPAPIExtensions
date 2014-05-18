@@ -124,6 +124,18 @@ namespace KSPAPIExtensions.PartMessage
     public delegate void PartHeirachyChanged();
 
     /// <summary>
+    /// A root part has been selected in the VAB.
+    /// </summary>
+    [PartMessageDelegate(typeof(PartHeirachyChanged))]
+    public delegate void PartRootSelected();
+
+    /// <summary>
+    /// A root part has been removed in the VAB.
+    /// </summary>
+    [PartMessageDelegate(typeof(PartHeirachyChanged))]
+    public delegate void PartRootRemoved();
+
+    /// <summary>
     /// The parent of this part has changed. Note: this is automatically invoked by the framework, so you don't ever need to raise the event.
     /// </summary>
     /// <param name="parent">New parent, or null if it has been detached.</param>

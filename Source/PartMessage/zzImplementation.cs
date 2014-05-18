@@ -821,6 +821,7 @@ namespace KSPAPIExtensions.PartMessage
         {
             // Clear the listeners list when reloaded.
             GameEvents.onGameSceneLoadRequested.Add(SceneLoadedListener);
+            GameEvents.onInputLocksModified.Add(OnInputLocksModified);
             GameEvents.onPartAttach.Add(OnPartAttach);
             GameEvents.onPartRemove.Add(OnPartRemove);
         }
@@ -828,6 +829,7 @@ namespace KSPAPIExtensions.PartMessage
         internal void OnDestroy()
         {
             GameEvents.onGameSceneLoadRequested.Remove(SceneLoadedListener);
+            GameEvents.onInputLocksModified.Remove(OnInputLocksModified);
             GameEvents.onPartAttach.Remove(OnPartAttach);
             GameEvents.onPartRemove.Remove(OnPartRemove);
             listeners = null;
@@ -835,7 +837,30 @@ namespace KSPAPIExtensions.PartMessage
 
         private void SceneLoadedListener(GameScenes scene)
         {
+            currRoot = null;
             listeners.Clear();
+        }
+
+        private Part currRoot = null;
+
+        private void OnInputLocksModified(GameEvents.FromToAction<ControlTypes, ControlTypes> data)
+        {
+            var ship = EditorLogic.fetch.ship;
+
+            if (ship.parts.Count > 0)
+            {
+                if (((object)ship.parts[0]) != ((object)currRoot))
+                {
+                    Part root = ship.parts[0];
+                    SendAsyncProxy<PartRootSelected>(this, root);
+                    currRoot = root;
+                }
+            }
+            else if(currRoot != null)
+            {
+                SendAsyncProxy<PartRootRemoved>(this, currRoot);
+                currRoot = null;
+            }
         }
 
         private void OnPartAttach(GameEvents.HostTargetAction<Part, Part> data)
