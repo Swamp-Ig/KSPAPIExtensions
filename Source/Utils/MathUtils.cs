@@ -347,6 +347,28 @@ namespace KSPAPIExtensions
             return v => (v/div).ToString("F" + (sigFigs - exp - 1));
         }
 
+
+        /// <summary>
+        /// Formats a mass in tons as either tons if >= 1.0, or as grams if < 1.0
+        /// </summary>
+        public static string FormatMass(float mass, int sigFigs = 4, int exponent = 0)
+        {
+            if (mass < 1.0f)
+                return mass.ToStringSI(sigFigs, exponent + 6, "g");
+            else
+                return mass.ToStringSI(sigFigs, exponent, "t");
+        }
+
+        /// <summary>
+        /// Formats a mass in tons as either tons if >= 1.0, or as grams if < 1.0
+        /// </summary>
+        public static string FormatMass(double mass, int sigFigs = 4, int exponent = 0)
+        {
+            if (mass < 1.0f)
+                return mass.ToStringSI(sigFigs, exponent+6, "g");
+            else
+                return mass.ToStringSI(sigFigs, exponent, "t");
+        }
     }
 
     /// <summary>
