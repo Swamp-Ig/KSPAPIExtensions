@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Reflection;
+using DeftTech.DuckTyping;
 using UnityEngine;
 
+
+// ReSharper disable once CheckNamespace
 namespace KSPAPIExtensions
 {
     /// <summary>
@@ -34,15 +36,15 @@ namespace KSPAPIExtensions
     [Flags]
     public enum GameSceneFilter
     {
-        Loading = 1 << (int)GameScenes.LOADING,
-        MainMenu = 1 << (int)GameScenes.MAINMENU,
-        SpaceCenter = 1 << (int)GameScenes.SPACECENTER,
-        VAB = 1 << (int)GameScenes.EDITOR,
-        SPH = 1 << (int)GameScenes.SPH,
-        Flight = 1 << (int)GameScenes.FLIGHT,
-        TrackingStation = 1 << (int)GameScenes.TRACKSTATION,
-        Settings = 1 << (int)GameScenes.SETTINGS,
-        Credits = 1 << (int)GameScenes.CREDITS,
+        Loading = 1 << GameScenes.LOADING,
+        MainMenu = 1 << GameScenes.MAINMENU,
+        SpaceCenter = 1 << GameScenes.SPACECENTER,
+        VAB = 1 << GameScenes.EDITOR,
+        SPH = 1 << GameScenes.SPH,
+        Flight = 1 << GameScenes.FLIGHT,
+        TrackingStation = 1 << GameScenes.TRACKSTATION,
+        Settings = 1 << GameScenes.SETTINGS,
+        Credits = 1 << GameScenes.CREDITS,
 
         AnyEditor = VAB | SPH, 
         AnyEditorOrFlight = AnyEditor | Flight,
@@ -84,11 +86,7 @@ namespace KSPAPIExtensions
             }
         foundField:
 
-            foreach (UIPartActionWindow window in (List<UIPartActionWindow>)windowListField.GetValue(controller))
-                if (window.part == part)
-                    return window;
-
-            return null;
+            return ((List<UIPartActionWindow>) windowListField.GetValue(controller)).FirstOrDefault(window => window.part == part);
         }
 
         /// <summary>
@@ -178,9 +176,7 @@ namespace KSPAPIExtensions
                 return true;
 
             if (TestFlag(relation, PartRelationship.Symmetry))
-                foreach (Part sym in other.symmetryCounterparts)
-                    if (part == sym)
-                        return true;
+                return other.symmetryCounterparts.Any(sym => part == sym);
             return false;
         }
 
@@ -204,6 +200,88 @@ namespace KSPAPIExtensions
         {
             return (int)(filter & HighLogic.LoadedScene.AsFilter()) != 0;
         }
+
+        /// <summary>
+        /// Register an 'OnUpdate' method for use in the editor.
+        /// This should be done in the Awake scene of 
+        /// </summary>
+        /// <param name="module"></param>
+        /// <param name="action"></param>
+        public static void RegisterOnUpdateEditor(this PartModule module, Action action)
+        {
+            if (!HighLogic.LoadedSceneIsEditor)
+                return;
+            Part part = module.part;
+            IOnEditorUpdateUtility utility;
+            if (part.Modules.Contains(typeof (OnEditorUpdateUtility).Name))
+                utility = DuckTyping.Cast<IOnEditorUpdateUtility>(part.Modules[typeof (OnEditorUpdateUtility).Name]);
+            else
+            {
+                utility = DuckTyping.Cast<IOnEditorUpdateUtility>(part.gameObject.AddComponent(OnEditorUpdateUtility.LatestVersion));
+                part.Modules.Add((PartModule)utility);
+            }
+            utility.AddOnUpdate(module, action);
+        }
+    }
+
+    public interface IOnEditorUpdateUtility
+    {
+        void AddOnUpdate(PartModule module, Action action);
+    }
+
+    public class OnEditorUpdateUtility : PartModule, IOnEditorUpdateUtility
+    {
+        public static readonly Type LatestVersion = SystemUtils.TypeElectionWinner(typeof (OnEditorUpdateUtility), "KSPAPIExtensions");
+
+        public override void OnSave(ConfigNode node)
+        {
+            node.AddValue("MM_DYNAMIC", "true");
+        }
+
+        private class ModAction : IComparable<ModAction>
+        {
+            public PartModule module;
+            public Action action;
+
+            private int Index
+            {
+                get
+                {
+                    return module.part.Modules.IndexOf(module);
+                }
+            }
+
+            public int CompareTo(ModAction other)
+            {
+                return Index.CompareTo(other.Index);
+            }
+        }
+
+        private readonly List<ModAction> modules = new List<ModAction>();
+
+        public void AddOnUpdate(PartModule module, Action action)
+        {
+            ModAction item = new ModAction
+            {
+                module = module,
+                action = action,
+            };
+            int insert = modules.BinarySearch(item);
+            if (insert < 0)
+                modules.Insert(~insert, item);
+        }
+
+        public void Update()
+        {
+            for (int i = 0; i < modules.Count; i++)
+            {
+                ModAction action = modules[i];
+                if (!action.module)
+                    modules.RemoveAt(i--);
+                else if (action.module.enabled)
+                    action.action();
+            }
+        }
     }
 
     /// <summary>
@@ -213,7 +291,7 @@ namespace KSPAPIExtensions
     {
         private readonly Type type;
 
-        public KSPAddonFixed(KSPAddon.Startup startup, bool once, Type type)
+        public KSPAddonFixed(Startup startup, bool once, Type type)
             : base(startup, once)
         {
             this.type = type;
@@ -221,21 +299,23 @@ namespace KSPAPIExtensions
 
         public override bool Equals(object obj)
         {
-            if (obj.GetType() != this.GetType()) { return false; }
+            if (obj.GetType() != GetType()) { return false; }
             return Equals((KSPAddonFixed)obj);
         }
 
         public bool Equals(KSPAddonFixed other)
         {
-            if (this.once != other.once) { return false; }
-            if (this.startup != other.startup) { return false; }
-            if (this.type != other.type) { return false; }
+            if (once != other.once) { return false; }
+            if (startup != other.startup) { return false; }
+            if (type != other.type) { return false; }
             return true;
         }
 
         public override int GetHashCode()
         {
-            return this.startup.GetHashCode() ^ this.once.GetHashCode() ^ this.type.GetHashCode();
+            // ReSharper disable NonReadonlyFieldInGetHashCode
+            return startup.GetHashCode() ^ once.GetHashCode() ^ type.GetHashCode();
+            // ReSharper restore NonReadonlyFieldInGetHashCode
         }
     }
 }

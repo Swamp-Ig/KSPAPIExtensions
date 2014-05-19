@@ -28,10 +28,10 @@ namespace KSPAPIExtensions
 
             // If we are loaded from the first loaded assembly that has this class, then we are responsible to destroy
             var candidates = (from ass in AssemblyLoader.loadedAssemblies
-                              where ass.assembly.GetType(targetCls.FullName, false) != null
-                              && ass.assembly.GetName().Name == assemName
-                              orderby ass.assembly.GetName().Version descending, ass.path ascending
-                              select ass).ToArray();
+                where ass.assembly.GetName().Name == assemName &&
+                      ass.assembly.GetType(targetCls.FullName, false) != null
+                orderby ass.assembly.GetName().Version descending, ass.path ascending
+                select ass).ToArray();
             var winner = candidates.First();
 
             if (!ReferenceEquals(targetCls.Assembly, winner.assembly))
@@ -49,6 +49,33 @@ namespace KSPAPIExtensions
                 Debug.Log("[" + targetCls.Name + "] Elected unopposed version= " + winner.assembly.GetName().Version + " at " + winner.path);
 
             return true;
+        }
+
+        /// <summary>
+        /// Ensure the latest version of a particular type is used. This is useful when multiple versions of the same assembly are potentially loaded.
+        /// 
+        /// This will the latest version of the class (specified with <see cref="AssemblyVersionAttribute"/>)
+        /// that appears the earliest in the list of loaded assemblies (as loaded from <see cref="AssemblyLoader.loadedAssemblies"/>).
+        /// </summary>
+        /// <param name="targetCls">Target class to search for. Searched by the <see cref="Type.FullName"/> attribute.</param>
+        /// <param name="assemName">Assembly name of the expected assembly.</param>
+        /// <exception cref="InvalidProgramException">If the class is not in an assembly named <paramref name="assemName"/>. </exception>
+        /// <returns>True if this class wins the election, false otherwise.</returns>
+        public static Type TypeElectionWinner(Type targetCls, String assemName)
+        {
+            if (targetCls.Assembly.GetName().Name != assemName)
+                throw new InvalidProgramException("Assembly: " + targetCls.Assembly.GetName().Name + " at location: " +
+                                                  targetCls.Assembly.Location +
+                                                  " is not in the expected assembly. Code has been copied and this will cause problems.");
+
+            // If we are loaded from the first loaded assembly that has this class, then we are responsible to destroy
+            var candidates = (from ass in AssemblyLoader.loadedAssemblies
+                where ass.assembly.GetName().Name == assemName
+                let t = ass.assembly.GetType(targetCls.FullName, false)
+                where t != null
+                orderby ass.assembly.GetName().Version descending, ass.path ascending
+                select t).ToArray();
+            return candidates.First();
         }
 
         public static LinkedListNode<T> FindFirstNode<T>(this LinkedList<T> list, Predicate<T> match)
