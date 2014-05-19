@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reflection;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 namespace KSPAPIExtensions
 {
     public static class MathUtils
@@ -49,9 +46,9 @@ namespace KSPAPIExtensions
         /// eg: 13401 -> 13.4 k
         /// 
         /// </summary>
-        /// <param name="d">value to format</param>
+        /// <param name="value">value to format</param>
         /// <param name="unit">unit string</param>
-        /// <param name="exp">Exponennt to the existing value. eg: if value was km rather than m this would be 3.</param>
+        /// <param name="exponent">Exponennt to the existing value. eg: if value was km rather than m this would be 3.</param>
         /// <param name="sigFigs">number of signifigant figures to display</param>
         /// <returns></returns>
         public static string ToStringSI(this double value, int sigFigs = 3, int exponent = 0, string unit = null)
@@ -66,9 +63,9 @@ namespace KSPAPIExtensions
         /// eg: 13401 -> 13.4 k
         /// 
         /// </summary>
-        /// <param name="d">value to format</param>
+        /// <param name="value">value to format</param>
         /// <param name="unit">unit string</param>
-        /// <param name="exp">Exponennt to the existing value. eg: if value was km rather than m this would be 3.</param>
+        /// <param name="exponent">Exponennt to the existing value. eg: if value was km rather than m this would be 3.</param>
         /// <param name="sigFigs">number of signifigant figures to display</param>
         /// <returns></returns>
         public static string ToStringSI(this float value, int sigFigs = 3, int exponent = 0, string unit = null)
@@ -228,7 +225,7 @@ namespace KSPAPIExtensions
         /// <summary>
         /// Round a number to a set number of significant figures.
         /// </summary>
-        /// <param name="d">number to round</param>
+        /// <param name="value">number to round</param>
         /// <param name="sigFigs">number of significant figures, defaults to 3</param>
         /// <returns></returns>
         public static double RoundSigFigs(this double value, int sigFigs = 3)
@@ -245,6 +242,7 @@ namespace KSPAPIExtensions
         /// <param name="exponent">The natural exponent, if your value was km rather than m, use 3</param>
         public static SIPrefix GetSIPrefix(this double value, int exponent = 0)
         {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (value == 0)
                 return SIPrefix.None;
 
@@ -323,9 +321,9 @@ namespace KSPAPIExtensions
         /// <param name="digits">Number of decimal places. Negatives will work (eg: -1 rounds to nearest 10)</param>
         /// <param name="exponent">Natural exponent of value, eg: use 3 if value is km rather than m</param>
         /// <returns></returns>
-        public static double Round(this SIPrefix pfx, double value, int sigFigs = 3, int exponent = 0)
+        public static double Round(this SIPrefix pfx, double value, int digits = 3, int exponent = 0)
         {
-            double div = Math.Pow(10, (int)pfx - sigFigs + exponent);
+            double div = Math.Pow(10, (int)pfx - digits + exponent);
             return Math.Round(value / div) * div;
         }
 
@@ -349,25 +347,23 @@ namespace KSPAPIExtensions
 
 
         /// <summary>
-        /// Formats a mass in tons as either tons if >= 1.0, or as grams if < 1.0
+        /// Formats a mass in tons as either tons if >= 1.0, or as grams if &lt; 1.0
         /// </summary>
         public static string FormatMass(float mass, int sigFigs = 4, int exponent = 0)
         {
-            if (mass < 1.0f)
-                return mass.ToStringSI(sigFigs, exponent + 6, "g");
-            else
-                return mass.ToStringSI(sigFigs, exponent, "t");
+            return mass < 1.0f ? 
+                mass.ToStringSI(sigFigs, exponent + 6, "g") : 
+                mass.ToStringSI(sigFigs, exponent, "t");
         }
 
         /// <summary>
-        /// Formats a mass in tons as either tons if >= 1.0, or as grams if < 1.0
+        /// Formats a mass in tons as either tons if >= 1.0, or as grams if &lt; 1.0
         /// </summary>
         public static string FormatMass(double mass, int sigFigs = 4, int exponent = 0)
         {
-            if (mass < 1.0f)
-                return mass.ToStringSI(sigFigs, exponent+6, "g");
-            else
-                return mass.ToStringSI(sigFigs, exponent, "t");
+            return mass < 1.0f ? 
+                mass.ToStringSI(sigFigs, exponent+6, "g") : 
+                mass.ToStringSI(sigFigs, exponent, "t");
         }
     }
 

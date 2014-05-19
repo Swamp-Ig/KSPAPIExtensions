@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Reflection;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 namespace KSPAPIExtensions
 {
 
@@ -138,7 +137,8 @@ namespace KSPAPIExtensions
     {
         private static T _instance;
 
-        private static object _lock = new object();
+        // ReSharper disable once StaticFieldInGenericType
+        private static readonly object Lock = new object();
 
         public static T Instance
         {
@@ -152,7 +152,7 @@ namespace KSPAPIExtensions
                     return null;
                 }
 
-                lock (_lock)
+                lock (Lock)
                 {
                     if (_instance == null)
                     {
@@ -170,7 +170,7 @@ namespace KSPAPIExtensions
                         {
                             GameObject singleton = new GameObject();
                             _instance = singleton.AddComponent<T>();
-                            singleton.name = "(singleton) " + typeof(T).ToString();
+                            singleton.name = "(singleton) " + typeof(T);
 
                             DontDestroyOnLoad(singleton);
 
@@ -190,7 +190,9 @@ namespace KSPAPIExtensions
             }
         }
 
-        private static bool applicationIsQuitting = false;
+        // ReSharper disable once StaticFieldInGenericType
+        private static bool applicationIsQuitting;
+        
         /// <summary>
         /// When Unity quits, it destroys objects in a random order.
         /// In principle, a Singleton is only destroyed when application quits.

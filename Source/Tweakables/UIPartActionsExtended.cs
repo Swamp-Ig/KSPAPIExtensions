@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Reflection;
 using UnityEngine;
 using KSPAPIExtensions.PartMessage;
-using KSPAPIExtensions.DebuggingUtils;
 
+// ReSharper disable once CheckNamespace
 namespace KSPAPIExtensions
 {
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     internal class UIPartActionsExtendedEditorRegistrationAddon : MonoBehaviour
     {
-        private static bool loadedInScene = false;
+        private static bool loadedInScene;
 
         public void Start()
         {
@@ -35,7 +35,7 @@ namespace KSPAPIExtensions
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     internal class UIPartActionsExtendedFlightRegistrationAddon : MonoBehaviour
     {
-        private static bool loadedInScene = false;
+        private static bool loadedInScene;
 
         public void Start()
         {
@@ -68,7 +68,7 @@ namespace KSPAPIExtensions
                              where ass.assembly.GetType(typeof(UIPartActionsExtendedRegistration).FullName, false) != null
                              orderby ass.assembly.GetName().Version descending, ass.path ascending
                              select ass;
-            return candidates.First().assembly == Assembly.GetExecutingAssembly();
+            return ReferenceEquals(candidates.First().assembly, Assembly.GetExecutingAssembly());
         }
 
         internal static void Register()
@@ -109,6 +109,7 @@ namespace KSPAPIExtensions
 
     internal class UIPartActionResourceEditorImproved : UIPartActionResourceEditor
     {
+        // ReSharper disable ParameterHidesMember
         public override void Setup(UIPartActionWindow window, Part part, UI_Scene scene, UI_Control control, PartResource resource)
         {
             double amount = resource.amount;
@@ -117,6 +118,7 @@ namespace KSPAPIExtensions
 
             slider.SetValueChangedDelegate(OnSliderChanged);
         }
+        // ReSharper restore ParameterHidesMember
 
         private float oldSliderValue;
 
@@ -125,6 +127,7 @@ namespace KSPAPIExtensions
             base.UpdateItem();
 
             SIPrefix prefix = (resource.maxAmount).GetSIPrefix();
+            // ReSharper disable once InconsistentNaming
             Func<double, string> Formatter = prefix.GetFormatter(resource.maxAmount, sigFigs: 4);
 
             resourceMax.Text = Formatter(resource.maxAmount) + " " + prefix.PrefixString();
@@ -135,14 +138,15 @@ namespace KSPAPIExtensions
 
         private void OnSliderChanged(IUIObject obj)
         {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (oldSliderValue == slider.Value)
                 return;
             oldSliderValue = slider.Value;
 
             SIPrefix prefix = resource.maxAmount.GetSIPrefix();
-            resource.amount = prefix.Round((double)slider.Value * this.resource.maxAmount, sigFigs:4);
+            resource.amount = prefix.Round(slider.Value * resource.maxAmount, digits:4);
             PartMessageService.Send<PartResourceInitialAmountChanged>(this, part, resource, resource.amount);
-            if (this.scene == UI_Scene.Editor)
+            if (scene == UI_Scene.Editor)
                 SetSymCounterpartsAmount(resource.amount);
         }
 
@@ -185,9 +189,10 @@ namespace KSPAPIExtensions
     internal class UIPartActionLabelImproved : UIPartActionLabel
     {
         private SpriteText label;
-        private void Awake()
+
+        public void Awake()
         {
-            label = base.gameObject.GetComponentInChildren<SpriteText>();
+            label = gameObject.GetComponentInChildren<SpriteText>();
         }
 
         public override void UpdateItem()
@@ -199,18 +204,18 @@ namespace KSPAPIExtensions
             {
                 double value = (double)field.FieldInfo.GetValue(target);
                 label.Text = (string.IsNullOrEmpty(field.guiName) ? field.name : field.guiName) + " " +
-                    (string.IsNullOrEmpty(field.guiFormat) ? value.ToString() : value.ToStringExt(field.guiFormat))
+                    (string.IsNullOrEmpty(field.guiFormat) ? value.ToString(CultureInfo.CurrentUICulture) : value.ToStringExt(field.guiFormat))
                     + field.guiUnits;
             }
             if (fieldType == typeof(float))
             {
                 float value = (float)field.FieldInfo.GetValue(target);
                 label.Text = (string.IsNullOrEmpty(field.guiName) ? field.name : field.guiName) + " " +
-                    (string.IsNullOrEmpty(field.guiFormat) ? value.ToString() : value.ToStringExt(field.guiFormat))
+                    (string.IsNullOrEmpty(field.guiFormat) ? value.ToString(CultureInfo.CurrentUICulture) : value.ToStringExt(field.guiFormat))
                     + field.guiUnits;
             }
             else
-                label.Text = this.field.GuiString(target);
+                label.Text = field.GuiString(target);
         }
 
         internal static UIPartActionLabelImproved CreateTemplate(UIPartActionLabel oldLabel)

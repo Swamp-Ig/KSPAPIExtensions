@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reflection;
-using UnityEngine;
-using System.Linq.Expressions;
-using System.Collections;
-using System.Text.RegularExpressions;
+﻿using UnityEngine;
 
 namespace KSPAPIExtensions.PartMessage
 {
@@ -67,17 +59,16 @@ namespace KSPAPIExtensions.PartMessage
     /// <summary>
     /// Raised when the size of an attachment node is changed.
     /// </summary>
-    /// <param name="name">Attachment node name</param>
+    /// <param name="node">The attachment node</param>
     /// <param name="minDia">The minimum diameter across the attachment area. For circular areas this will be the diameter</param>
     /// <param name="area">Area in square meters of the attachment. </param>
-    /// <param name="size">Attach node 'size' an integer value as per <see cref="AttachNode"/></param>
     [PartMessageDelegate(typeof(PartAttachNodeChanged))]
     public delegate void PartAttachNodeSizeChanged(AttachNode node, [UseLatest] float minDia, [UseLatest] float area);
 
     /// <summary>
     /// Location or orientation of the attachment node is changed
     /// </summary>
-    /// <param name="name">Attachment node name</param>
+    /// <param name="node">The attachment node</param>
     [PartMessageDelegate(typeof(PartAttachNodeChanged))]
     public delegate void PartAttachNodePositionChanged(AttachNode node, [UseLatest] Vector3 location, [UseLatest] Vector3 orientation, [UseLatest] Vector3 secondaryAxis);
 

@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 namespace KSPAPIExtensions
 {
     [UI_ChooseOption]
@@ -77,7 +75,7 @@ namespace KSPAPIExtensions
             return edit;
         }
 
-        protected UI_ChooseOption fieldInfo
+        protected UI_ChooseOption FieldInfo
         {
             get
             {
@@ -85,6 +83,7 @@ namespace KSPAPIExtensions
             }
         }
 
+        // ReSharper disable ParameterHidesMember
         public override void Setup(UIPartActionWindow window, Part part, PartModule partModule, UI_Scene scene, UI_Control control, BaseField field)
         {
             base.Setup(window, part, partModule, scene, control, field);
@@ -92,22 +91,23 @@ namespace KSPAPIExtensions
             incUp.SetValueChangedDelegate(obj => IncrementValue(true));
             slider.SetValueChangedDelegate(OnValueChanged);
         }
+        // ReSharper restore ParameterHidesMember
 
         private void IncrementValue(bool up)
         {
-            if (fieldInfo.options == null || fieldInfo.options.Length == 0)
+            if (FieldInfo.options == null || FieldInfo.options.Length == 0)
                 selectedIdx = -1;
             else
-                selectedIdx = (selectedIdx + fieldInfo.options.Length + (up ? 1 : -1)) % fieldInfo.options.Length;
+                selectedIdx = (selectedIdx + FieldInfo.options.Length + (up ? 1 : -1)) % FieldInfo.options.Length;
             SetValueFromIdx();
         }
 
         private void OnValueChanged(IUIObject obj)
         {
-            if (fieldInfo.options == null || fieldInfo.options.Length == 0)
+            if (FieldInfo.options == null || FieldInfo.options.Length == 0)
                 selectedIdx = -1;
             else
-                selectedIdx = Mathf.RoundToInt(slider.Value * (fieldInfo.options.Length - 1));
+                selectedIdx = Mathf.RoundToInt(slider.Value * (FieldInfo.options.Length - 1));
             SetValueFromIdx();
         }
 
@@ -123,7 +123,7 @@ namespace KSPAPIExtensions
                 }
                 else
                 {
-                    string selectedValue = fieldInfo.options[selectedIdx];
+                    string selectedValue = FieldInfo.options[selectedIdx];
                     field.SetValue(selectedValue, field.host);
                     if (scene == UI_Scene.Editor)
                         SetSymCounterpartValue(selectedValue);
@@ -141,24 +141,19 @@ namespace KSPAPIExtensions
                 return;
             }
 
-            if (fieldInfo.display != null && fieldInfo.display.Length > selectedIdx)
+            if (FieldInfo.display != null && FieldInfo.display.Length > selectedIdx)
             {
-                fieldName.Text = field.guiName + ": " + fieldInfo.display[selectedIdx];
+                fieldName.Text = field.guiName + ": " + FieldInfo.display[selectedIdx];
             }
             else
             {
-                fieldName.Text = field.guiName + ": " + fieldInfo.options[selectedIdx];
+                fieldName.Text = field.guiName + ": " + FieldInfo.options[selectedIdx];
             }
-            slider.Value = (float)selectedIdx / (float)((fieldInfo.options ?? fieldInfo.display).Length - 1);
-        }
-
-        private int GetFieldValueInt()
-        {
-            return field.GetValue<int>(field.host);
+            slider.Value = selectedIdx / (float)((FieldInfo.options ?? FieldInfo.display).Length - 1);
         }
 
 
-        bool exceptionPrinted = false;
+        bool exceptionPrinted;
         public override void UpdateItem()
         {
             try
@@ -170,18 +165,18 @@ namespace KSPAPIExtensions
                         return;
 
                     selectedIdx = newSelectedIdx;
-                    if (fieldInfo.options == null || selectedIdx < 0 || selectedIdx >= fieldInfo.options.Length)
+                    if (FieldInfo.options == null || selectedIdx < 0 || selectedIdx >= FieldInfo.options.Length)
                         selectedIdx = -1;
                 }
                 else
                 {
                     string newSelectedValue = field.GetValue<string>(field.host);
-                    if (selectedIdx >= 0 && newSelectedValue == fieldInfo.options[selectedIdx])
+                    if (selectedIdx >= 0 && newSelectedValue == FieldInfo.options[selectedIdx])
                         return;
 
                     selectedIdx = -1;
-                    for (int i = 0; i < fieldInfo.options.Length; ++i)
-                        if (newSelectedValue == fieldInfo.options[i])
+                    for (int i = 0; i < FieldInfo.options.Length; ++i)
+                        if (newSelectedValue == FieldInfo.options[i])
                         {
                             selectedIdx = i;
                             break;
@@ -200,6 +195,7 @@ namespace KSPAPIExtensions
     }
 
 
+    // ReSharper disable once InconsistentNaming
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field)]
     public class UI_ChooseOption : UI_Control
     {

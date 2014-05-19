@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using UnityEngine;
 using System.Globalization;
+using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 namespace KSPAPIExtensions
 {
 
@@ -121,7 +116,7 @@ namespace KSPAPIExtensions
         }
 
 
-        protected UI_FloatEdit fieldInfo
+        protected UI_FloatEdit FieldInfo
         {
             get
             {
@@ -129,6 +124,7 @@ namespace KSPAPIExtensions
             }
         }
 
+        // ReSharper disable ParameterHidesMember
         public override void Setup(UIPartActionWindow window, Part part, PartModule partModule, UI_Scene scene, UI_Control control, BaseField field)
         {
             base.Setup(window, part, partModule, scene, control, field);
@@ -139,25 +135,26 @@ namespace KSPAPIExtensions
             slider.SetValueChangedDelegate(slider_OnValueChanged);
 
             // so update runs.
-            this.value = GetFieldValue() + 0.1f;
+            value = GetFieldValue() + 0.1f;
             UpdateFieldInfo();
         }
+        // ReSharper restore ParameterHidesMember
 
         private void buttons_ValueChanged(bool up, bool large)
         {
-            float increment = (large ? fieldInfo.incrementLarge : fieldInfo.incrementSmall);
+            float increment = (large ? FieldInfo.incrementLarge : FieldInfo.incrementSmall);
             float excess = value % increment;
             float newValue;
             if (up)
             {
-                if (increment - excess < fieldInfo.incrementSlide / 2)
+                if (increment - excess < FieldInfo.incrementSlide / 2)
                     newValue = value - excess + increment * 2;
                 else
                     newValue = value - excess + increment;
             }
             else
             {
-                if (excess < fieldInfo.incrementSlide / 2)
+                if (excess < FieldInfo.incrementSlide / 2)
                     newValue = value - excess - increment;
                 else
                     newValue = value - excess;
@@ -172,26 +169,29 @@ namespace KSPAPIExtensions
 
             float newValue = Mathf.Lerp(valueLow, valueHi, slider.Value);
 
-            if (fieldInfo.incrementLarge == 0 || valueHi == fieldInfo.maxValue) 
+            // ReSharper disable CompareOfFloatsByEqualityOperator
+            if (FieldInfo.incrementLarge == 0 || valueHi == FieldInfo.maxValue) 
             {
                 if (newValue > valueHi)
                     newValue = valueHi;
             }
-            else if (newValue > valueHi - fieldInfo.incrementSlide)
-                newValue = valueHi - fieldInfo.incrementSlide;
+            else if (newValue > valueHi - FieldInfo.incrementSlide)
+                newValue = valueHi - FieldInfo.incrementSlide;
 
             SetValueFromGUI(newValue);
+            // ReSharper restore CompareOfFloatsByEqualityOperator
         }
 
         private void SetValueFromGUI(float newValue)
         {
-            if (fieldInfo.incrementSlide != 0)
-                newValue = Mathf.Round(newValue / fieldInfo.incrementSlide) * fieldInfo.incrementSlide;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (FieldInfo.incrementSlide != 0)
+                newValue = Mathf.Round(newValue / FieldInfo.incrementSlide) * FieldInfo.incrementSlide;
 
-            if (newValue < fieldInfo.minValue)
-                newValue = fieldInfo.minValue;
-            else if (newValue > fieldInfo.maxValue)
-                newValue = fieldInfo.maxValue;
+            if (newValue < FieldInfo.minValue)
+                newValue = FieldInfo.minValue;
+            else if (newValue > FieldInfo.maxValue)
+                newValue = FieldInfo.maxValue;
 
             UpdateValueDisplay(newValue);
 
@@ -200,44 +200,42 @@ namespace KSPAPIExtensions
                 SetSymCounterpartValue(newValue);
         }
 
-        private void SliderRange(float value, out float valueLow, out float valueHi)
+        private void SliderRange(float newValue, out float valueLow, out float valueHi)
         {
-            if (fieldInfo.incrementLarge == 0)
+            // ReSharper disable CompareOfFloatsByEqualityOperator
+            if (FieldInfo.incrementLarge == 0)
             {
-                valueLow = fieldInfo.minValue;
-                valueHi = fieldInfo.maxValue;
+                valueLow = FieldInfo.minValue;
+                valueHi = FieldInfo.maxValue;
                 return;
             }
 
-            if (fieldInfo.incrementSmall == 0)
+            if (FieldInfo.incrementSmall == 0)
             {
-                valueLow = Mathf.Floor((value + fieldInfo.incrementSlide / 2f) / fieldInfo.incrementLarge) * fieldInfo.incrementLarge;
-                valueHi = valueLow + fieldInfo.incrementLarge;
-                if (valueLow == fieldInfo.maxValue)
+                valueLow = Mathf.Floor((newValue + FieldInfo.incrementSlide / 2f) / FieldInfo.incrementLarge) * FieldInfo.incrementLarge;
+                valueHi = valueLow + FieldInfo.incrementLarge;
+                if (valueLow == FieldInfo.maxValue)
                 {
                     valueHi = valueLow;
-                    valueLow -= fieldInfo.incrementLarge;
+                    valueLow -= FieldInfo.incrementLarge;
                 }
             }
             else
             {
-                valueLow = Mathf.Floor((value + fieldInfo.incrementSlide / 2f) / fieldInfo.incrementSmall) * fieldInfo.incrementSmall;
-                valueHi = valueLow + fieldInfo.incrementSmall;
-                if (valueLow == fieldInfo.maxValue)
+                valueLow = Mathf.Floor((newValue + FieldInfo.incrementSlide / 2f) / FieldInfo.incrementSmall) * FieldInfo.incrementSmall;
+                valueHi = valueLow + FieldInfo.incrementSmall;
+                if (valueLow == FieldInfo.maxValue)
                 {
                     valueHi = valueLow;
-                    valueLow -= fieldInfo.incrementSmall;
+                    valueLow -= FieldInfo.incrementSmall;
                 }
             }
+            // ReSharper restore CompareOfFloatsByEqualityOperator
         }
 
         private float GetFieldValue()
         {
-            if (isModule)
-            {
-                return field.GetValue<float>(this.partModule);
-            }
-            return field.GetValue<float>(this.part);
+            return isModule ? field.GetValue<float>(partModule) : field.GetValue<float>(part);
         }
 
         public override void UpdateItem()
@@ -246,11 +244,12 @@ namespace KSPAPIExtensions
             fieldName.Text = field.guiName;
 
             // Update the value.
-            float value = GetFieldValue();
-            if (value != this.value)
-                UpdateValueDisplay(value);
+            float fValue = GetFieldValue();
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (fValue != value)
+                UpdateValueDisplay(fValue);
 
-            uint newHash = fieldInfo.GetHashedState();
+            uint newHash = FieldInfo.GetHashedState();
             if (controlState != newHash)
             {
                 UpdateFieldInfo();
@@ -258,22 +257,24 @@ namespace KSPAPIExtensions
             }
         }
 
-        private void UpdateValueDisplay(float value)
+        private void UpdateValueDisplay(float newValue)
         {
-            this.value = value;
-            if (fieldInfo.incrementSlide != 0)
-                value = Mathf.Round(value / fieldInfo.incrementSlide) * fieldInfo.incrementSlide;
+            this.value = newValue;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (FieldInfo.incrementSlide != 0)
+                newValue = Mathf.Round(newValue / FieldInfo.incrementSlide) * FieldInfo.incrementSlide;
 
             float valueLow, valueHi;
-            SliderRange(value, out valueLow, out valueHi);
-            slider.Value = Mathf.InverseLerp(valueLow, valueHi, value);
+            SliderRange(newValue, out valueLow, out valueHi);
+            slider.Value = Mathf.InverseLerp(valueLow, valueHi, newValue);
 
-            fieldValue.Text = value.ToStringExt(field.guiFormat) + field.guiUnits;
+            fieldValue.Text = newValue.ToStringExt(field.guiFormat) + field.guiUnits;
         }
 
         private void UpdateFieldInfo()
         {
-            if (fieldInfo.incrementLarge == 0.0)
+            // ReSharper disable CompareOfFloatsByEqualityOperator
+            if (FieldInfo.incrementLarge == 0.0)
             {
                 incLargeDown.gameObject.SetActive(false);
                 incLargeDownLabel.gameObject.SetActive(false);
@@ -288,7 +289,7 @@ namespace KSPAPIExtensions
                 slider.transform.localScale = Vector3.one;
                 fieldName.transform.localPosition = new Vector3(6, -8, 0);
             }
-            else if (fieldInfo.incrementSmall == 0.0)
+            else if (FieldInfo.incrementSmall == 0.0)
             {
                 incLargeDown.gameObject.SetActive(true);
                 incLargeDownLabel.gameObject.SetActive(true);
@@ -319,17 +320,19 @@ namespace KSPAPIExtensions
                 fieldName.transform.localPosition = new Vector3(40, -8, 0);
             }
 
-            if (fieldInfo.incrementSlide == 0)
+            if (FieldInfo.incrementSlide == 0)
                 slider.gameObject.SetActive(false);
             else
                 slider.gameObject.SetActive(true);
+            // ReSharper restore CompareOfFloatsByEqualityOperator
         }
     }
 
+    // ReSharper disable once InconsistentNaming
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field)]
     public class UI_FloatEdit : UI_Control
     {
-        private static string UIControlName = "UIPartActionFloatEdit";
+        private const string UIControlName = "UIPartActionFloatEdit";
 
         public float minValue = float.NegativeInfinity;
         public float maxValue = float.PositiveInfinity;
@@ -366,24 +369,28 @@ namespace KSPAPIExtensions
         public override void Save(ConfigNode node, object host)
         {
             base.Save(node, host);
-            if (minValue != float.NegativeInfinity)
-                node.AddValue("minValue", minValue.ToString());
-            if (maxValue != float.PositiveInfinity)
-                node.AddValue("maxValue", maxValue.ToString());
+            if (!float.IsNegativeInfinity(minValue))
+                node.AddValue("minValue", minValue.ToString(CultureInfo.InvariantCulture));
+            if (!float.IsPositiveInfinity(maxValue))
+                node.AddValue("maxValue", maxValue.ToString(CultureInfo.InvariantCulture));
+            // ReSharper disable CompareOfFloatsByEqualityOperator
             if (incrementLarge != 0.0f)
-                node.AddValue("incrementLarge", incrementLarge.ToString());
+                node.AddValue("incrementLarge", incrementLarge.ToString(CultureInfo.InvariantCulture));
             if (incrementSmall != 0.0f)
-                node.AddValue("incrementSmall", incrementSmall.ToString());
+                node.AddValue("incrementSmall", incrementSmall.ToString(CultureInfo.InvariantCulture));
             if (incrementSlide != 0.0f)
-                node.AddValue("incrementSlide", incrementSlide.ToString());
+                node.AddValue("incrementSlide", incrementSlide.ToString(CultureInfo.InvariantCulture));
+            // ReSharper restore CompareOfFloatsByEqualityOperator
         }
 
         internal unsafe uint GetHashedState()
         {
+            // ReSharper disable LocalVariableHidesMember
             fixed (float* minValue = &this.minValue, maxValue = &this.maxValue, incrementLarge = &this.incrementLarge, incrementSmall = &this.incrementSmall, incrementSlide = &this.incrementSlide)
             {
                 return *((uint*)minValue) ^ *((uint*)maxValue) ^ *((uint*)incrementLarge) ^ *((uint*)incrementSmall) ^ *((uint*)incrementSlide);
             }
+            // ReSharper restore LocalVariableHidesMember
         }
     }
 }

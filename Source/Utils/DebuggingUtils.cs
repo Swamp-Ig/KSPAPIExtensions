@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 namespace KSPAPIExtensions.DebuggingUtils
 {
     [Flags]
@@ -64,34 +63,32 @@ namespace KSPAPIExtensions.DebuggingUtils
             foreach (Component c in t.gameObject.GetComponents<Component>())
             {
 
-                if (!typeof(Transform).IsInstanceOfType(c) && ((options & DumpTreeOption.Components) == DumpTreeOption.Components))
+                if (!(c is Transform) && ((options & DumpTreeOption.Components) == DumpTreeOption.Components))
                     sb.AppendLine(space + "+ component:" + c.GetType());
 
-                if (typeof(Renderer).IsInstanceOfType(c) && (options & DumpTreeOption.Materials) == DumpTreeOption.Materials)
+                if (c is Renderer && (options & DumpTreeOption.Materials) == DumpTreeOption.Materials)
                     foreach (Material m in t.renderer.sharedMaterials)
                         sb.AppendLine(space + "++ mat:" + m.name);
 
-                if (typeof(MeshFilter).IsInstanceOfType(c) && (options & DumpTreeOption.Mesh) == DumpTreeOption.Mesh)
+                if (c is MeshFilter && (options & DumpTreeOption.Mesh) == DumpTreeOption.Mesh)
                 {
                     MeshFilter filter = (MeshFilter)c;
-                    if (filter != null)
-                        sb.AppendLine(space + "++ mesh:" + ((filter.sharedMesh == null) ? "*null*" : (filter.sharedMesh.name + " verts:" + filter.sharedMesh.vertexCount)));
+                    sb.AppendLine(space + "++ mesh:" + ((filter.sharedMesh == null) ? "*null*" : (filter.sharedMesh.name + " verts:" + filter.sharedMesh.vertexCount)));
                 }
 
-                if (typeof(MeshCollider).IsInstanceOfType(c) && (options & DumpTreeOption.Mesh) == DumpTreeOption.Mesh)
+                if (c is MeshCollider && (options & DumpTreeOption.Mesh) == DumpTreeOption.Mesh)
                 {
                     MeshCollider collider = (MeshCollider)c;
-                    if (collider != null)
-                        sb.AppendLine(space + "++ mesh:" + ((collider.sharedMesh == null) ? "*null*" : (collider.sharedMesh.name + " verts:" + collider.sharedMesh.vertexCount)));
+                    sb.AppendLine(space + "++ mesh:" + ((collider.sharedMesh == null) ? "*null*" : (collider.sharedMesh.name + " verts:" + collider.sharedMesh.vertexCount)));
                 }
 
-                if (typeof(Rigidbody).IsInstanceOfType(c) && (options & DumpTreeOption.Rigidbody) == DumpTreeOption.Rigidbody)
+                if (c is Rigidbody && (options & DumpTreeOption.Rigidbody) == DumpTreeOption.Rigidbody)
                 {
                     Rigidbody body = (Rigidbody)c;
                     sb.AppendLine(space + "++ Mass:" + body.mass.ToString("F3"));
                     sb.AppendLine(space + "++ CoM:" + body.centerOfMass.ToString("F3"));
                 }
-                if (typeof(Joint).IsInstanceOfType(c) && (options & DumpTreeOption.Rigidbody) == DumpTreeOption.Rigidbody)
+                if (c is Joint && (options & DumpTreeOption.Rigidbody) == DumpTreeOption.Rigidbody)
                 {
                     Joint joint = (Joint)c;
                     sb.AppendLine(space + "++ anchor:" + joint.anchor.ToString("F3"));

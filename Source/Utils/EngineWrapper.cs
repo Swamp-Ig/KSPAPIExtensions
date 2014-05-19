@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace KSPAPIExtensions.Utils
 {
+    // ReSharper disable InconsistentNaming
     public class EngineWrapper
     {
         public enum ModuleType
@@ -14,9 +13,9 @@ namespace KSPAPIExtensions.Utils
             MODULERCS
         }
 
-        private ModuleType type;
-        private ModuleEngines mE;
-        private ModuleEnginesFX mEFX;
+        private readonly ModuleType type;
+        private readonly ModuleEngines mE;
+        private readonly ModuleEnginesFX mEFX;
 
         public EngineWrapper(Part part)
         {
@@ -57,6 +56,7 @@ namespace KSPAPIExtensions.Utils
 
         public ModuleType Type { get { return type; } }
 
+        // ReSharper disable once InconsistentNaming
         public List<Propellant> propellants
         {
             get
@@ -350,4 +350,5 @@ namespace KSPAPIExtensions.Utils
             }
         }
     }
+    // ReSharper restore InconsistentNaming
 }

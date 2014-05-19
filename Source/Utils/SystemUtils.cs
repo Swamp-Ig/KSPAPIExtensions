@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Text;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 namespace KSPAPIExtensions
 {
     public static class SystemUtils
@@ -35,7 +34,7 @@ namespace KSPAPIExtensions
                               select ass).ToArray();
             var winner = candidates.First();
 
-            if (targetCls.Assembly != winner.assembly)
+            if (!ReferenceEquals(targetCls.Assembly, winner.assembly))
                 return false;
 
             if (candidates.Length > 1)
@@ -78,6 +77,7 @@ namespace KSPAPIExtensions
             return count;
         }
 
+        // ReSharper disable once InconsistentNaming
         public static bool TryGet<K, T>(this KeyedCollection<K, T> coll, K key, out T value)
         {
             try
@@ -93,12 +93,12 @@ namespace KSPAPIExtensions
         }
     }
 
+    // ReSharper disable InconsistentNaming
     public class OrderedDictionary<K, T> : KeyedCollection<K, T>
     {
-        private Func<T, K> GetKey;
+        private readonly Func<T, K> GetKey;
 
         public OrderedDictionary(Func<T, K> GetKey)
-            : base()
         {
             this.GetKey = GetKey;
         }
@@ -134,4 +134,5 @@ namespace KSPAPIExtensions
             }
         }
     }
+    // ReSharper restore InconsistentNaming
 }

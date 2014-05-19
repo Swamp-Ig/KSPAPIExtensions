@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reflection;
 using UnityEngine;
-using System.Linq.Expressions;
-using System.Collections;
-using System.Text.RegularExpressions;
 using DeftTech.DuckTyping;
 
 namespace KSPAPIExtensions.PartMessage
@@ -96,14 +90,14 @@ namespace KSPAPIExtensions.PartMessage
         /// This is generally called either in the constructor, or in OnAwake for Part and PartModules.
         /// Note that this method does <b>not</b> scan base classes for events and listeners, they need to be scanned explicitly.
         /// </summary>
-        /// <param name="obj">Object to register. If this is a Part, a PartModule, or a PartMessagePartProxy the recieving part will be discovered.</param>
+        /// <param name="obj">Object to register. If this is a Part, a PartModule, or a IPartMessagePartProxy the recieving part will be discovered.</param>
         void Register<T>(T obj);
 
         /// <summary>
         /// Send a message. Normally this will be automatically invoked by the event, but there are types when dynamic invocation is required.
         /// </summary>
         /// <typeparam name="T">Message type. This must be a delegate type marked with the PartMessageDelegate attribute.</typeparam>
-        /// <param name="source">Source of the message. If this is a Part, a PartModule, or a PartMessagePartProxy the source part will be discovered.</param>
+        /// <param name="source">Source of the message. If this is a Part, a PartModule, or a IPartMessagePartProxy the source part will be discovered.</param>
         /// <param name="args">message arguments</param>
         void Send<T>(object source, params object[] args);
 
@@ -111,7 +105,7 @@ namespace KSPAPIExtensions.PartMessage
         /// Send a message. Normally this will be automatically invoked by the event, but there are types when dynamic invocation is required.
         /// </summary>
         /// <param name="message">The message delegate type. This must have the PartMessageDelegate attribute.</param>
-        /// <param name="source">Source of the message. If this is a Part, a PartModule, or a PartMessagePartProxy the source part will be discovered.</param>
+        /// <param name="source">Source of the message. If this is a Part, a PartModule, or a IPartMessagePartProxy the source part will be discovered.</param>
         /// <param name="args">message arguments</param>
         void Send(Type message, object source, params object[] args);
 
@@ -141,7 +135,7 @@ namespace KSPAPIExtensions.PartMessage
         /// be invoked prior to returning.
         /// </summary>
         /// <typeparam name="T">Message type. This must be a delegate type marked with the PartMessageDelegate attribute.</typeparam>
-        /// <param name="source">Source of the message. If this is a Part, a PartModule, or a PartMessagePartProxy the source part will be discovered.</param>
+        /// <param name="source">Source of the message. If this is a Part, a PartModule, or a IPartMessagePartProxy the source part will be discovered.</param>
         /// <param name="args">message arguments</param>
         void SendAsync<T>(object source, params object[] args);
 
@@ -151,7 +145,7 @@ namespace KSPAPIExtensions.PartMessage
         /// be invoked prior to returning.
         /// </summary>
         /// <param name="message">The message delegate type. This must have the PartMessageDelegate attribute.</param>
-        /// <param name="source">Source of the message. If this is a Part, a PartModule, or a PartMessagePartProxy the source part will be discovered.</param>
+        /// <param name="source">Source of the message. If this is a Part, a PartModule, or a IPartMessagePartProxy the source part will be discovered.</param>
         /// <param name="args">message arguments</param>
         void SendAsync(Type message, object source, params object[] args);
 
@@ -183,6 +177,7 @@ namespace KSPAPIExtensions.PartMessage
         /// </summary>
         /// <param name="filter">The delegate for the filter</param>
         /// <param name="source">Message source, must match. If null will match all sources.</param>
+        /// <param name="part">Source part to match. If null will match all parts.</param>
         /// <param name="messages">Optional list of messages to match. If empty, all messages are matched.</param>
         /// <returns>Disposable object. When done call dispose. Works well with using clauses.</returns>
         IDisposable Filter(PartMessageFilter filter, object source = null, Part part = null, params Type[] messages);
@@ -192,6 +187,7 @@ namespace KSPAPIExtensions.PartMessage
         /// Any duplicates of the same message and same arguments will be swallowed silently.
         /// </summary>
         /// <param name="source">source to consolidate from. Not specified or null will match all sources</param>
+        /// <param name="part">Source part to match. If null will match all parts.</param>
         /// <param name="messages">messages to consolidate. If not specified, all messages are consolidated.</param>
         /// <returns>Disposable object. When done call dispose. Works well with using clauses.</returns>
         IDisposable Consolidate(object source = null, Part part = null, params Type[] messages);
@@ -200,6 +196,7 @@ namespace KSPAPIExtensions.PartMessage
         /// Ignore messages sent by the source until the returned object is destroyed.
         /// </summary>
         /// <param name="source">Source to ignore. Null will ignore all sources.</param>
+        /// <param name="part">Source part to match. If null will match all parts.</param>
         /// <param name="messages">Messages to ignore. If not specified, all messages are ignored.</param>
         /// <returns>Disposable object. When done call dispose. Works well with using clauses.</returns>
         IDisposable Ignore(object source = null, Part part = null, params Type[] messages);
@@ -222,7 +219,8 @@ namespace KSPAPIExtensions.PartMessage
     /// </summary>
     static public class PartMessageService
     {
-        internal static readonly string partMessageServiceName = typeof(PartMessageService).FullName + ":SingletonInstance";
+        internal static readonly string PartMessageServiceName = typeof(PartMessageService).FullName + ":SingletonInstance";
+        // ReSharper disable once InconsistentNaming
         internal static IPartMessageService _instance;
 
         /// <summary>
@@ -235,7 +233,7 @@ namespace KSPAPIExtensions.PartMessage
                 if (_instance != null)
                     return _instance;
 
-                GameObject serviceGo = GameObject.Find(partMessageServiceName);
+                GameObject serviceGo = GameObject.Find(PartMessageServiceName);
                 if (serviceGo == null)
                     throw new InvalidProgramException("PartMessageService has not been initialized.");
 
@@ -264,20 +262,20 @@ namespace KSPAPIExtensions.PartMessage
         }
 
         /// <summary>
-        /// Convenience short-cut <see cref="IPartMessageService.Register"/>. 
+        /// Convenience short-cut <see cref="IPartMessageService.Register{T}"/>. 
         /// Scan an object for events marked with <see cref="PartMessageEvent"/> and methods marked with <see cref="PartMessageListener"/> and hook them up.
         /// This is generally called either in the constructor, or in OnAwake for Part and PartModules.
         /// Note that this method does <b>not</b> scan base classes for events and listeners, they need to be scanned explicitly.
         /// </summary>
         /// <typeparam name="T">The type of the object to register. This can normally be inferred from the argument type.</typeparam>
-        /// <param name="obj">Object to register. If this is a Part, a PartModule, or a PartMessagePartProxy the recieving part will be discovered.</param>
+        /// <param name="obj">Object to register. If this is a Part, a PartModule, or a IPartMessagePartProxy the recieving part will be discovered.</param>
         public static void Register<T>(T obj) 
         {
-            Instance.Register<T>(obj);
+            Instance.Register(obj);
         }
 
         /// <summary>
-        /// Convenience short-cut <see cref="IPartMessageService.Send<T>(object, params object[])"/>. 
+        /// Convenience short-cut <see cref="IPartMessageService.Send{T}"/>. 
         /// Send a message. Normally this will be automatically invoked by the event, but there are types when dynamic invocation is required.
         /// This version allows the source to proxy for some other part.
         /// </summary>

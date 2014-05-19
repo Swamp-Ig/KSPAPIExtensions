@@ -1,12 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reflection;
-using UnityEngine;
-using System.Linq.Expressions;
-using System.Collections;
-using System.Text.RegularExpressions;
 
 namespace KSPAPIExtensions.PartMessage
 {
@@ -23,9 +15,9 @@ namespace KSPAPIExtensions.PartMessage
             if (delegateType.GetCustomAttributes(typeof(PartMessageDelegate), true).Length == 0)
                 throw new ArgumentException("Message does not have the PartMessageDelegate attribute");
 
-            this.DelegateType = delegateType;
-            this.Scenes = scenes;
-            this.Relations = relations;
+            DelegateType = delegateType;
+            Scenes = scenes;
+            Relations = relations;
         }
 
         /// <summary>
@@ -88,8 +80,8 @@ namespace KSPAPIExtensions.PartMessage
                 if (parent.GetCustomAttributes(typeof(PartMessageDelegate), true).Length != 1)
                     throw new ArgumentException("Parent does not have the PartMessageDelegate attribute");
             }
-            this.Parent = parent;
-            this.IsAbstract = isAbstract;
+            Parent = parent;
+            IsAbstract = isAbstract;
         }
 
         /// <summary>
@@ -125,7 +117,7 @@ namespace KSPAPIExtensions.PartMessage
     /// the part recievers will not be able to filter by source relationship.
     /// You will need to call PartMessageService.Register(object) in the Awake method or constructor.
     /// </summary>
-    public interface PartMessagePartProxy
+    public interface IPartMessagePartProxy
     {
         Part ProxyPart { get; }
     }

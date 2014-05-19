@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Reflection;
 using UnityEngine;
 using System.Linq.Expressions;
 using System.Collections;
-using System.Text.RegularExpressions;
-using KSPAPIExtensions.PartMessage;
 using DeftTech.DuckTyping;
 
 namespace KSPAPIExtensions.PartMessage
@@ -59,7 +56,7 @@ namespace KSPAPIExtensions.PartMessage
         internal static CurrentEventInfoImpl current;
 
 #if DEBUG
-        private bool onStack = false;
+        private bool onStack;
 #endif
         private CurrentEventInfoImpl previous;
         internal bool filterComplete = false;
@@ -95,7 +92,7 @@ namespace KSPAPIExtensions.PartMessage
 
             previous = current;
             current = this;
-            return (IDisposable)this;
+            return this;
         }
 
         void IDisposable.Dispose()
@@ -139,6 +136,7 @@ namespace KSPAPIExtensions.PartMessage
 
         public PartRelationship SourceRelationTo(Part destPart)
         {
+            // ReSharper disable once InvokeAsExtensionMethod  Don't because SourcePart may be null
             return PartUtils.RelationTo(SourcePart, destPart);
         }
 
@@ -151,15 +149,15 @@ namespace KSPAPIExtensions.PartMessage
         {
             if (other == null)
                 return false;
-            if (this == other)
+            if (ReferenceEquals(this, other))
                 return true;
 
             if (GetHashCode() != other.GetHashCode())
                 return false;
 
-            if (this.Source != other.Source)
+            if (Source != other.Source)
                 return false;
-            if (this.Message.Name != other.Message.Name)
+            if (Message.Name != other.Message.Name)
                 return false;
             if (!IdentArguments.SequenceEqual(other.IdentArguments))
                 return false;
@@ -175,17 +173,19 @@ namespace KSPAPIExtensions.PartMessage
 
         public override int GetHashCode()
         {
+            // ReSharper disable NonReadonlyFieldInGetHashCode
             if (hashCode != 0)
                 return hashCode;
 
             hashCode =
-                this.Source.GetHashCode()
-                ^ ((this.SourcePart == null) ? 0 : this.SourcePart.GetHashCode())
-                ^ this.Message.Name.GetHashCode()
-                ^ this.Arguments.Length;
+                Source.GetHashCode()
+                ^ ((SourcePart == null) ? 0 : SourcePart.GetHashCode())
+                ^ Message.Name.GetHashCode()
+                ^ Arguments.Length;
             foreach (object arg in IdentArguments)
                 hashCode ^= (arg == null ? 0 : arg.GetHashCode());
             return hashCode;
+            // ReSharper restore NonReadonlyFieldInGetHashCode
         }
 
         #endregion
@@ -197,7 +197,7 @@ namespace KSPAPIExtensions.PartMessage
     #region Part Message
     internal class MessageImpl : IPartMessage
     {
-        private IPartMessageDelegateV1 ifMsg;
+        private readonly IPartMessageDelegateV1 ifMsg;
         internal MessageImpl parent;
 
         internal MessageImpl(ServiceImpl service, Type message)
@@ -245,7 +245,8 @@ namespace KSPAPIExtensions.PartMessage
 
         public IEnumerator<IPartMessage> GetEnumerator()
         {
-            return new Enumerator() {
+            return new Enumerator
+            {
                 head = this
             };
         }
@@ -259,7 +260,7 @@ namespace KSPAPIExtensions.PartMessage
         {
             internal MessageImpl head;
             private MessageImpl current;
-            private bool atEnd = false;
+            private bool atEnd;
 
             public IPartMessage Current
             {
@@ -290,10 +291,9 @@ namespace KSPAPIExtensions.PartMessage
                     throw new InvalidOperationException("Iterator disposed");
                 if (atEnd)
                     throw new InvalidOperationException("Iterator is at end");
-                if (current == null)
-                    current = head;
-                else
-                    current = current.parent;
+                
+                current = current == null ? head : current.parent;
+                
                 return !(atEnd = (current == null));
             }
 
@@ -396,8 +396,6 @@ namespace KSPAPIExtensions.PartMessage
             public MethodInfo method;
             public IPartMessageListenerV1 attr;
 
-            public LinkedListNode<ListenerInfo> node;
-
             public object Target
             {
                 get
@@ -406,20 +404,12 @@ namespace KSPAPIExtensions.PartMessage
                 }
             }
 
-            public Part TargetPart
+            private Part TargetPart
             {
                 get
                 {
-                    object target = this.Target;
+                    object target = Target;
                     return AsPart(target);
-                }
-            }
-
-            public PartModule TargetModule
-            {
-                get
-                {
-                    return Target as PartModule;
                 }
             }
 
@@ -427,6 +417,7 @@ namespace KSPAPIExtensions.PartMessage
             {
                 if (!attr.Scenes.IsLoaded())
                     return false;
+                // ReSharper disable once InvokeAsExtensionMethod SourcePart can be null
                 if (!PartUtils.RelationTest(info.SourcePart, TargetPart, attr.Relations))
                     return false;
                 return true;
@@ -453,21 +444,19 @@ namespace KSPAPIExtensions.PartMessage
                 listeners.Add(message, listenerList);
             }
 
-            ListenerInfo info = new ListenerInfo()
+            listenerList.AddLast(new ListenerInfo
             {
                 targetRef = new WeakReference(target),
                 method = meth,
                 attr = attr
-            };
-            info.node = listenerList.AddLast(info);
+            });
         }
 
-        private static readonly MethodInfo handoffSend = typeof(ServiceImpl).GetMethod("SendProxy", BindingFlags.Instance | BindingFlags.Public, null, new Type[] { typeof(Type), typeof(object), typeof(Part), typeof(object[]) }, null);
-        private static readonly MethodInfo handoffSendAsync = typeof(ServiceImpl).GetMethod("SendAsyncProxy", BindingFlags.Instance | BindingFlags.Public, null, new Type[] { typeof(Type), typeof(object), typeof(Part), typeof(object[]) }, null);
+        private static readonly MethodInfo HandoffSend = typeof(ServiceImpl).GetMethod("SendProxy", BindingFlags.Instance | BindingFlags.Public, null, new[] { typeof(Type), typeof(object), typeof(Part), typeof(object[]) }, null);
+        private static readonly MethodInfo HandoffSendAsync = typeof(ServiceImpl).GetMethod("SendAsyncProxy", BindingFlags.Instance | BindingFlags.Public, null, new[] { typeof(Type), typeof(object), typeof(Part), typeof(object[]) }, null);
 
         private void GenerateEventHandoff(bool async, object source, EventInfo evt)
         {
-            MethodAttributes addAttrs = evt.GetAddMethod(true).Attributes;
             Part part = AsPart(source);
 
             // This generates a dynamic method that pulls the properties of the event
@@ -486,7 +475,7 @@ namespace KSPAPIExtensions.PartMessage
             }
             Expression createArr = Expression.NewArrayInit(typeof(object), cvrt);
 
-            Expression invoke = Expression.Call(Expression.Constant(this), async?handoffSendAsync:handoffSend,
+            Expression invoke = Expression.Call(Expression.Constant(this), async?HandoffSendAsync:HandoffSend,
                 Expression.Constant(message), Expression.Constant(source), Expression.Constant(part), createArr);
 
             Delegate d = Expression.Lambda(message, invoke, peLst).Compile();
@@ -499,7 +488,7 @@ namespace KSPAPIExtensions.PartMessage
 
         #region Message delivery
 
-        private LinkedList<CurrentEventInfoImpl> asyncMessages = new LinkedList<CurrentEventInfoImpl>();
+        private readonly LinkedList<CurrentEventInfoImpl> asyncMessages = new LinkedList<CurrentEventInfoImpl>();
 
         public void Send<T>(object source, params object[] args)
         {
@@ -558,17 +547,15 @@ namespace KSPAPIExtensions.PartMessage
 
             using (message.Push())
             {
-                if (filters != null)
-                    foreach (FilterInfo info in filters)
-                        if (info.CheckPrereq(message) && info.Filter(message))
-                            return;
+                if (filters != null && filters.Any(info => info.CheckPrereq(message) && info.Filter(message)))
+                    return;
             }
             message.filterComplete = true;
 
             asyncMessages.AddLast(message);
         }
 
-        private void Update()
+        public void Update()
         {
             while (asyncMessages.Count > 0)
             {
@@ -593,9 +580,8 @@ namespace KSPAPIExtensions.PartMessage
             using (message.Push())
             {
                 if (!message.filterComplete && filters != null)
-                    foreach (FilterInfo info in filters)
-                        if (info.CheckPrereq(message) && info.Filter(message))
-                            return;
+                    if (filters.Any(info => info.CheckPrereq(message) && info.Filter(message)))
+                        return;
 
                 // Send the message
                 foreach (IPartMessage currMessage in message.Message)
@@ -682,8 +668,10 @@ namespace KSPAPIExtensions.PartMessage
         /// <returns>Disposable object. When done call dispose. Works well with using clauses.</returns>
         public IDisposable Filter(PartMessageFilter filter, object source = null, Part part = null, params Type[] messages)
         {
-            FilterInfo info = new FilterInfo();
-            info.Filter = filter;
+            FilterInfo info = new FilterInfo
+            {
+                Filter = filter
+            };
 
             RegisterFilterInfo(source, part, messages, info);
 
@@ -716,7 +704,7 @@ namespace KSPAPIExtensions.PartMessage
         /// <returns>Disposable object. When done call dispose. Works well with using clauses.</returns>
         public IDisposable Ignore(object source = null, Part part = null, params Type[] messages)
         {
-            return Filter((message) => true, source, part, messages);
+            return Filter(message => true, source, part, messages);
         }
 
         private void RegisterFilterInfo(object source, Part part, Type[] messages, FilterInfo info)
@@ -725,13 +713,14 @@ namespace KSPAPIExtensions.PartMessage
             info.part = part;
             info.service = this;
 
-            foreach (Type message in messages)
-                info.messages.Add(message.FullName);
+            // ReSharper disable once ForCanBeConvertedToForeach
+            for (int i = 0; i < messages.Length; i++)
+                info.messages.Add(messages[i].FullName);
 
-            if(ServiceImpl.filters == null)
-                ServiceImpl.filters = new LinkedList<FilterInfo>();
+            if(filters == null)
+                filters = new LinkedList<FilterInfo>();
 
-            info.node = ServiceImpl.filters.AddFirst(info);
+            info.node = filters.AddFirst(info);
         }
 
         internal class FilterInfo : IDisposable
@@ -747,17 +736,14 @@ namespace KSPAPIExtensions.PartMessage
 
             public bool CheckPrereq(ICurrentEventInfo info)
             {
-                if (this.source != null && this.source != info.Source)
+                if (source != null && source != info.Source)
                     return false;
-                if (this.part != null && this.part != info.SourcePart)
+                if (part != null && part != info.SourcePart)
                     return false;
-                if (this.messages.Count == 0)
+                if (messages.Count == 0)
                     return true;
 
-                foreach(IPartMessage message in info.Message)
-                    if (!this.messages.Contains(message.Name))
-                        return true;
-                return false;
+                return info.Message.Any(message => !messages.Contains(message.Name));
             }
 
             public virtual void Dispose()
@@ -765,9 +751,9 @@ namespace KSPAPIExtensions.PartMessage
                 if(service == null)
                     throw new InvalidOperationException("Already disposed");
 
-                ServiceImpl.filters.Remove(node);
-                if (ServiceImpl.filters.Count == 0)
-                    ServiceImpl.filters = null;
+                filters.Remove(node);
+                if (filters.Count == 0)
+                    filters = null;
                 service = null;
             }
 
@@ -784,7 +770,7 @@ namespace KSPAPIExtensions.PartMessage
         {
             public MessageConsolidator()
             {
-                this.Filter = ConsolidatingFilter;
+                Filter = ConsolidatingFilter;
             }
 
             private LinkedList<ICurrentEventInfo> messageList = new LinkedList<ICurrentEventInfo>();
@@ -793,13 +779,13 @@ namespace KSPAPIExtensions.PartMessage
             {
                 // Remove any matching previous
                 messageList.RemoveAll(evt => evt.Equals(message));
-                messageList.AddLast((CurrentEventInfoImpl)message);
+                messageList.AddLast(message);
                 return true;
             }
 
             public override void Dispose()
             {
-                ServiceImpl service = this.service;
+                ServiceImpl theService = service;
                 base.Dispose();
 
                 // Safe as we've already deregistered the filter, so no loops.
@@ -807,7 +793,7 @@ namespace KSPAPIExtensions.PartMessage
                 {
                     CurrentEventInfoImpl info = (CurrentEventInfoImpl)message;
                     info.filterComplete = false;
-                    service.Send((CurrentEventInfoImpl)message);
+                    theService.Send((CurrentEventInfoImpl)message);
                 }
                 messageList = null;
             }
@@ -841,7 +827,7 @@ namespace KSPAPIExtensions.PartMessage
             listeners.Clear();
         }
 
-        private Part currRoot = null;
+        private Part currRoot;
 
         private void OnInputLocksModified(GameEvents.FromToAction<ControlTypes, ControlTypes> data)
         {
@@ -852,7 +838,7 @@ namespace KSPAPIExtensions.PartMessage
 
             if (ship.parts.Count > 0)
             {
-                if (((object)ship.parts[0]) != ((object)currRoot))
+                if (!ReferenceEquals(ship.parts[0], currRoot))
                 {
                     Part root = ship.parts[0];
                     SendAsyncProxy<PartRootSelected>(this, root);
@@ -903,7 +889,7 @@ namespace KSPAPIExtensions.PartMessage
         #endregion
 
         #region Conversion to IPartMessage
-        private Dictionary<Type, IPartMessage> cachedPartMessages = new Dictionary<Type, IPartMessage>();
+        private readonly Dictionary<Type, IPartMessage> cachedPartMessages = new Dictionary<Type, IPartMessage>();
 
         /// <summary>
         /// Convert delegate type into the IPartMessage interface.
@@ -937,10 +923,7 @@ namespace KSPAPIExtensions.PartMessage
             if (module != null)
                 return module.part;
 
-            if(src.GetType().GetInterfaces().FirstOrDefault(
-                    t =>
-                        t.FullName == typeof (IPartMessagePartProxy).FullName ||
-                        t.FullName == "KSPAPIExtensions.PartMessagePartProxy") != null)
+            if(src.GetType().GetInterfaces().Any(t => t.FullName == typeof (IPartMessagePartProxy).FullName || t.FullName == "KSPAPIExtensions.PartMessagePartProxy"))
                 return DuckTyping.Cast<IPartMessagePartProxy>(src).ProxyPart;
             return null;
         }
@@ -951,7 +934,7 @@ namespace KSPAPIExtensions.PartMessage
     [KSPAddonFixed(KSPAddon.Startup.Instantly, false, typeof(PartMessageServiceInitializer))]
     internal class PartMessageServiceInitializer : MonoBehaviour
     {
-        private static bool loadedInScene = false;
+        private static bool loadedInScene;
 
         internal void Awake()
         {
@@ -974,12 +957,12 @@ namespace KSPAPIExtensions.PartMessage
             if (PartMessageService._instance != null)
             {
                 Debug.Log("[PartMessageService] destroying service from previous load");
-                UnityEngine.Object.Destroy(((ServiceImpl)PartMessageService._instance).gameObject);
+                Destroy(((ServiceImpl)PartMessageService._instance).gameObject);
             }
 
             // Create the part message service
-            GameObject serviceGo = new GameObject(PartMessageService.partMessageServiceName);
-            UnityEngine.Object.DontDestroyOnLoad(serviceGo);
+            GameObject serviceGo = new GameObject(PartMessageService.PartMessageServiceName);
+            DontDestroyOnLoad(serviceGo);
 
             // Assign the service to the static variable
             PartMessageService._instance = serviceGo.AddComponent<ServiceImpl>();
@@ -998,6 +981,7 @@ namespace KSPAPIExtensions.PartMessage
 
     internal class ListenerFerramAerospaceResearch : MonoBehaviour
     {
+        // ReSharper disable once InconsistentNaming
         private static Action<Part> SetBasicDragModuleProperties;
 
         public static void AddListener(GameObject serviceGo)
@@ -1006,7 +990,7 @@ namespace KSPAPIExtensions.PartMessage
             if (typeFARAeroUtil == null)
                 return;
 
-            MethodInfo info = typeFARAeroUtil.GetMethod("SetBasicDragModuleProperties", new Type[] { typeof(Part) });
+            MethodInfo info = typeFARAeroUtil.GetMethod("SetBasicDragModuleProperties", new[] { typeof(Part) });
 
             if (info == null)
             {
@@ -1021,7 +1005,7 @@ namespace KSPAPIExtensions.PartMessage
 
         private IPartMessageService service;
 
-        private void Awake()
+        public void Awake()
         {
             service = PartMessageService.Instance;
             GameEvents.onGameSceneLoadRequested.Add(GameSceneLoaded);
@@ -1036,7 +1020,7 @@ namespace KSPAPIExtensions.PartMessage
         }
 
         [PartMessageListener(typeof(PartModelChanged), relations:PartRelationship.Unknown, scenes: GameSceneFilter.AnyEditorOrFlight)]
-        private void PartModelChanged()
+        public void PartModelChanged()
         {
             Part part = service.CurrentEventInfo.SourcePart;
             if (part == null)
@@ -1074,7 +1058,7 @@ namespace KSPAPIExtensions.PartMessage
 
             public MessageEnumerator(Type top)
             {
-                this.current = this.top = top;
+                current = this.top = top;
             }
 
             private int pos = -1;
