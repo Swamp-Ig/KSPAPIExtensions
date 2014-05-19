@@ -217,8 +217,9 @@ namespace KSPAPIExtensions
                 utility = DuckTyping.Cast<IOnEditorUpdateUtility>(part.Modules[typeof (OnEditorUpdateUtility).Name]);
             else
             {
-                utility = DuckTyping.Cast<IOnEditorUpdateUtility>(part.gameObject.AddComponent(OnEditorUpdateUtility.LatestVersion));
-                part.Modules.Add((PartModule)utility);
+                PartModule onEditorUpdate = (PartModule)part.gameObject.AddComponent(OnEditorUpdateUtility.LatestVersion);
+                utility = DuckTyping.Cast<IOnEditorUpdateUtility>(onEditorUpdate);
+                part.Modules.Add(onEditorUpdate); 
             }
             utility.AddOnUpdate(module, action);
         }
