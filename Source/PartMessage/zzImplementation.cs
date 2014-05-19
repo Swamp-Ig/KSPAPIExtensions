@@ -930,12 +930,18 @@ namespace KSPAPIExtensions.PartMessage
         #region Utility Functions
         private static Part AsPart(object src) 
         {
-            if (src is Part)
-                return (Part)src;
-            if (src is PartModule)
-                return ((PartModule)src).part;
-            if (src is PartMessagePartProxy)
-                return ((PartMessagePartProxy)src).ProxyPart;
+            Part part = src as Part;
+            if (part != null)
+                return part;
+            PartModule module = src as PartModule;
+            if (module != null)
+                return module.part;
+
+            if(src.GetType().GetInterfaces().FirstOrDefault(
+                    t =>
+                        t.FullName == typeof (IPartMessagePartProxy).FullName ||
+                        t.FullName == "KSPAPIExtensions.PartMessagePartProxy") != null)
+                return DuckTyping.Cast<IPartMessagePartProxy>(src).ProxyPart;
             return null;
         }
         #endregion
