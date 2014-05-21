@@ -1,4 +1,5 @@
 ﻿using System;
+using KSPAPIExtensions.DebuggingUtils;
 
 namespace KSPAPIExtensions.PartMessage
 {
@@ -10,8 +11,10 @@ namespace KSPAPIExtensions.PartMessage
     {
         public PartMessageListener(Type delegateType, PartRelationship relations = PartRelationship.Self, GameSceneFilter scenes = GameSceneFilter.Any)
         {
-            if (delegateType == null || !delegateType.IsSubclassOf(typeof(Delegate)))
-                throw new ArgumentException("Message is not a delegate type");
+            if (delegateType == null)
+                throw new ArgumentException("Message argument is null");
+            if (!delegateType.IsSubclassOf(typeof(Delegate)))
+                throw new ArgumentException("Message is not a delegate type: " + typeof(Delegate).AssemblyQualifiedName + "\n" + Debugging.DumpTypeHeirachy(delegateType));
             if (delegateType.GetCustomAttributes(typeof(PartMessageDelegate), true).Length == 0)
                 throw new ArgumentException("Message does not have the PartMessageDelegate attribute");
 

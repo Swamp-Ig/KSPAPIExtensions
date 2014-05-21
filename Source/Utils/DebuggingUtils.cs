@@ -27,6 +27,29 @@ namespace KSPAPIExtensions.DebuggingUtils
     public static class Debugging
     {
 
+        public static string DumpTypeHeirachy(Type type)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("Declared class: ").Append(type.AssemblyQualifiedName);
+            while(true)
+            {
+                Type [] interfaces = type.GetInterfaces();
+                if (interfaces.Length > 0)
+                {
+                    sb.AppendLine("    Interfaces:");
+                    for (int i = 0; i < interfaces.Length; i++)
+                        sb.Append("      ").Append(interfaces[i].AssemblyQualifiedName);
+                }
+                type = type.BaseType;
+                if (type == null)
+                {
+                    sb.Length = sb.Length - 1;
+                    return sb.ToString();               
+                }
+                sb.AppendLine("  Base Type: " + type.AssemblyQualifiedName);
+            }
+        }
+
         /// <summary>
         /// Produce a string that displays the heirachy and other information about a transform.
         /// </summary>

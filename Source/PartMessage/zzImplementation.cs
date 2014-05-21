@@ -59,7 +59,7 @@ namespace KSPAPIExtensions.PartMessage
         private bool onStack;
 #endif
         private CurrentEventInfoImpl previous;
-        internal bool filterComplete = false;
+        internal bool filterComplete;
 
         internal CurrentEventInfoImpl(IPartMessage message, object source, Part part, object[] args)
         {
@@ -335,20 +335,37 @@ namespace KSPAPIExtensions.PartMessage
 
             foreach (MethodInfo meth in objType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             {
-                foreach (object attr in meth.GetCustomAttributes(true))
-                    if(attr.GetType().FullName == typeof(PartMessageListener).FullName)
-                        AddListener(obj, meth, AsListener(attr));
+                try
+                {
+                    foreach (object attr in meth.GetCustomAttributes(true))
+                        if (attr.GetType().FullName == typeof (PartMessageListener).FullName)
+                            AddListener(obj, meth, AsListener(attr));
+                }
+                catch
+                {
+                    Debug.LogError("Exception when attempting to register listener: " + (meth.DeclaringType != null ? meth.DeclaringType.AssemblyQualifiedName : "" ) + "." + meth.Name);
+                    throw;
+                }
             }
 
             foreach (EventInfo evt in objType.GetEvents(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             {
                 bool async;
-                foreach (object attr in evt.GetCustomAttributes(true))
-                    if (attr.GetType().FullName == typeof(PartMessageEvent).FullName)
-                    {
-                        async = AsEvent(attr).IsAsync;
-                        goto foundEvent;
-                    }
+                try
+                {
+                    foreach (object attr in evt.GetCustomAttributes(true))
+                        if (attr.GetType().FullName == typeof(PartMessageEvent).FullName)
+                        {
+                            async = AsEvent(attr).IsAsync;
+                            goto foundEvent;
+                        }                    
+                }
+                catch
+                {
+                    Debug.LogError("Exception when attempting to register event: " + (evt.DeclaringType != null ? evt.DeclaringType.AssemblyQualifiedName : "" ) + "." + evt.Name);
+                    throw;
+                }
+
                 continue;
 
             foundEvent:
