@@ -144,4 +144,12 @@ namespace KSPAPIExtensions.PartMessage
     /// </summary>
     [PartMessageDelegate(typeof(PartHeirachyChanged))]
     public delegate void PartChildDetached(Part child);
+
+
+    /// <summary>
+    /// There has been some change to the configuration for the engine.
+    /// </summary>
+    [PartMessageDelegate()]
+    public delegate void PartEngineConfigChanged();
+
 }
