@@ -203,40 +203,48 @@ namespace KSPAPIExtensions
 
         /// <summary>
         /// Register an 'OnUpdate' method for use in the editor.
-        /// This should be done in the Awake scene of 
+        /// This should be done in the OnAwake method of the module, and will ensure that all modules have the
+        /// registered method called in order of declaration of the module in the part file.
         /// </summary>
-        /// <param name="module"></param>
-        /// <param name="action"></param>
+        /// <param name="module">Module that is being registered.</param>
+        /// <param name="action">Method to call</param>
         public static void RegisterOnUpdateEditor(this PartModule module, Action action)
         {
             if (!HighLogic.LoadedSceneIsEditor)
                 return;
             Part part = module.part;
             IOnEditorUpdateUtility utility;
-            if (part.Modules.Contains(typeof (OnEditorUpdateUtility).Name))
-                utility = DuckTyping.Cast<IOnEditorUpdateUtility>(part.Modules[typeof (OnEditorUpdateUtility).Name]);
-            else
+            foreach (MonoBehaviour c in part.GetComponents<MonoBehaviour>())
             {
-                PartModule onEditorUpdate = (PartModule)part.gameObject.AddComponent(OnEditorUpdateUtility.LatestVersion);
-                utility = DuckTyping.Cast<IOnEditorUpdateUtility>(onEditorUpdate);
-                part.Modules.Add(onEditorUpdate); 
+                if (c.GetType().FullName == typeof (OnEditorUpdateUtility).FullName)
+                {
+                    utility = DuckTyping.Cast<IOnEditorUpdateUtility>(c);
+                    goto found;
+                }
             }
+
+            PartModule onEditorUpdate = (PartModule)part.gameObject.AddComponent(OnEditorUpdateUtility.LatestVersion);
+            utility = DuckTyping.Cast<IOnEditorUpdateUtility>(onEditorUpdate);
+            part.Modules.Add(onEditorUpdate); 
+
+            found:
             utility.AddOnUpdate(module, action);
         }
     }
 
-    public interface IOnEditorUpdateUtility
+    internal interface IOnEditorUpdateUtility
     {
         void AddOnUpdate(PartModule module, Action action);
     }
 
-    public class OnEditorUpdateUtility : PartModule, IOnEditorUpdateUtility
+    internal class OnEditorUpdateUtility : PartModule, IOnEditorUpdateUtility
     {
         public static readonly Type LatestVersion = SystemUtils.TypeElectionWinner(typeof (OnEditorUpdateUtility), "KSPAPIExtensions");
 
-        public override void OnSave(ConfigNode node)
+        public override void OnStart(StartState state)
         {
-            node.AddValue("MM_DYNAMIC", "true");
+            started = true;
+            part.Modules.Remove(this);
         }
 
         private class ModAction : IComparable<ModAction>
@@ -259,6 +267,7 @@ namespace KSPAPIExtensions
         }
 
         private readonly List<ModAction> modules = new List<ModAction>();
+        private bool started = false;
 
         public void AddOnUpdate(PartModule module, Action action)
         {
@@ -272,8 +281,12 @@ namespace KSPAPIExtensions
                 modules.Insert(~insert, item);
         }
 
+
         public void Update()
         {
+            if (!started)
+                return;
+
             for (int i = 0; i < modules.Count; i++)
             {
                 ModAction action = modules[i];
