@@ -86,7 +86,11 @@ namespace KSPAPIExtensions
             }
         foundField:
 
-            return ((List<UIPartActionWindow>) windowListField.GetValue(controller)).FirstOrDefault(window => window.part == part);
+            List<UIPartActionWindow> uiPartActionWindows = (List<UIPartActionWindow>) windowListField.GetValue(controller);
+            if (uiPartActionWindows == null)
+                return null;
+
+            return uiPartActionWindows.FirstOrDefault(window => window != null && window.part == part);
         }
 
         /// <summary>
