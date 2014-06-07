@@ -9,6 +9,12 @@ namespace KSPAPIExtensions
 
     public static class UnityUtils
     {
+        /// <summary>
+        /// Formats a quarternion as an axis and rotation angle about the axis. Useful for debugging quarternions.
+        /// </summary>
+        /// <param name="q">The quarternion</param>
+        /// <param name="format">Number format for the constituent values</param>
+        /// <returns>The formatted string</returns>
         public static string ToStringAngleAxis(this Quaternion q, string format = "F3")
         {
             Vector3 axis;
@@ -17,6 +23,13 @@ namespace KSPAPIExtensions
             return "(axis:" + axis.ToString(format) + " angle: " + angle.ToString(format) + ")";
         }
 
+        /// <summary>
+        /// Find decendant transform / game object with the specified name.
+        /// </summary>
+        /// <param name="t">Parent transform</param>
+        /// <param name="name">Name to search for</param>
+        /// <param name="activeOnly">If true, inactive transforms are ignored</param>
+        /// <returns></returns>
         public static Transform FindDecendant(this Transform t, string name, bool activeOnly = false)
         {
             bool found;
@@ -31,14 +44,27 @@ namespace KSPAPIExtensions
                 return t;
             }
             found = false;
-            Transform ret = null;
-            if (!activeOnly || t.gameObject.activeInHierarchy)
-                for (int i = 0; i < t.childCount && !found; ++i)
-                    ret = FindDecendant(t.GetChild(i), name, activeOnly, out found);
+            if (activeOnly && !t.gameObject.activeInHierarchy) 
+                return null;
 
-            return ret;
+            for (int i = 0; i < t.childCount; ++i)
+            {
+                Transform ret = FindDecendant(t.GetChild(i), name, activeOnly, out found);
+                if (found)
+                    return ret;
+            }
+
+            return null;
         }
 
+        /// <summary>
+        /// Returns the path between the parent and the child, with names of decendents in sequence separated
+        /// by '/'.  The returned string could be used with parent.Find to get the child.
+        /// </summary>
+        /// <param name="parent">Parent transform</param>
+        /// <param name="child">Child transform</param>
+        /// <returns>The path between</returns>
+        /// <exception cref="ArgumentException">If the parent is not an ancestor of the child.</exception>
         public static string PathToDecendant(this Transform parent, Transform child)
         {
             List<string> inBetween = new List<string>();
@@ -46,12 +72,13 @@ namespace KSPAPIExtensions
             {
                 inBetween.Add(track.name);
                 if (track.parent == null)
-                    throw new ArgumentException("Passed transform is not a module of this part");
+                    throw new ArgumentException("Parent transform is not ancestor of child", "parent");
             }
             inBetween.Reverse();
             return string.Join("/", inBetween.ToArray());
         }
     }
+
 
     /// <summary>
     /// Holds all the bits and pieces for a mesh without the checking code.
@@ -68,6 +95,11 @@ namespace KSPAPIExtensions
         public readonly Vector2[] uv;
         public readonly int[] triangles;
 
+        /// <summary>
+        /// Create a new unchecked mesh
+        /// </summary>
+        /// <param name="nVrt">Number of vertexes</param>
+        /// <param name="nTri">Number of triangles</param>
         public UncheckedMesh(int nVrt, int nTri)
         {
             this.nVrt = nVrt;
@@ -81,6 +113,11 @@ namespace KSPAPIExtensions
             triangles = new int[nTri * 3];
         }
 
+        /// <summary>
+        /// Write the mesh data to the given mesh.
+        /// </summary>
+        /// <param name="mesh">Mesh to write into</param>
+        /// <param name="name">Name for the mesh</param>
         public void WriteTo(Mesh mesh, string name = null)
         {
             mesh.Clear();
@@ -93,6 +130,11 @@ namespace KSPAPIExtensions
             mesh.triangles = triangles;
         }
 
+        /// <summary>
+        /// Create a new mesh object with the mesh data as current.
+        /// </summary>
+        /// <param name="name">Name of the mesh</param>
+        /// <returns>The new mesh</returns>
         public Mesh AsMesh(string name = null)
         {
             Mesh mesh = new Mesh();
@@ -100,6 +142,10 @@ namespace KSPAPIExtensions
             return mesh;
         }
 
+        /// <summary>
+        /// Dump the mesh as a string, useful for debugging.
+        /// </summary>
+        /// <returns>Mesh as string</returns>
         public string DumpMesh()
         {
             StringBuilder sb = new StringBuilder().AppendLine();

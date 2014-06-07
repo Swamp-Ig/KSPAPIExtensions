@@ -271,7 +271,7 @@ namespace KSPAPIExtensions
         }
 
         private readonly List<ModAction> modules = new List<ModAction>();
-        private bool started = false;
+        private bool started;
 
         public void AddOnUpdate(PartModule module, Action action)
         {
@@ -335,5 +335,5 @@ namespace KSPAPIExtensions
             return startup.GetHashCode() ^ once.GetHashCode() ^ type.GetHashCode();
             // ReSharper restore NonReadonlyFieldInGetHashCode
         }
-    }
+    } 
 }
