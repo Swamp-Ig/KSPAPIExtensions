@@ -17,27 +17,29 @@ API_FILES := \
     DuckTyping/GenericParameterDuckCaster.cs \
     DuckTyping/IDuckCaster.cs \
     DuckTyping/IDuckProxy.cs \
+    DuckTyping/IStaticDuckCaster.cs \
     DuckTyping/InterfaceDuckCaster.cs \
     DuckTyping/InterfaceDuckProxyType.cs \
     DuckTyping/InterfaceStaticDuckCaster.cs \
-    DuckTyping/IStaticDuckCaster.cs \
     DuckTyping/ToTypeFromTypeTree.cs \
     DuckTyping/TypeKey.cs \
-    Utils/EngineWrapper.cs \
-    Utils/MathUtils.cs \
-    Utils/DebuggingUtils.cs \
-    PartMessage/CommonMessages.cs \
     PartMessage/Attributes.cs \
-    PartMessage/zzImplementation.cs \
+    PartMessage/CommonMessages.cs \
     PartMessage/PartMessageService.cs \
-    Utils/PhysicsDebugger.cs \
+    PartMessage/zzImplementation.cs \
     Properties/AssemblyInfo.cs \
+    Tweakables/UIPartActionChooseOption.cs \
+    Tweakables/UIPartActionFloatEdit.cs \
+    Tweakables/UIPartActionsExtended.cs \
+    Utils/ConfigNodeUtils.cs \
+    Utils/DebuggingUtils.cs \
+    Utils/EngineWrapper.cs \
     Utils/KSPUtils.cs \
+    Utils/MathUtils.cs \
+    Utils/ParseUtils.cs \
+    Utils/PhysicsDebugger.cs \
     Utils/SystemUtils.cs \
     Utils/UnityUtils.cs \
-    Tweakables/UIPartActionChooseOption.cs \
-    Tweakables/UIPartActionsExtended.cs \
-    Tweakables/UIPartActionFloatEdit.cs \
     zzVersionChecker.cs \
 	$e
 
