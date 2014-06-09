@@ -96,11 +96,11 @@ namespace KSPAPIExtensions
         /// <summary>
         /// If this part is a symmetry clone of another part, this method will return the original part.
         /// </summary>
-        /// <param name="part"></param>
-        /// <returns></returns>
+        /// <param name="part">The part to find the original of</param>
+        /// <returns>The original part, or the part itself if it was the original part</returns>
         public static Part GetSymmetryCloneOriginal(this Part part)
         {
-            if (part.symmetryCounterparts == null || part.symmetryCounterparts.Count == 0)
+            if (!part.isClone || part.symmetryCounterparts == null || part.symmetryCounterparts.Count == 0)
                 return part;
 
             // Symmetry counterparts always are named xxxx(Clone) if they are cloned from xxxx. So the shortest name is the one.

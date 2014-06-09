@@ -587,6 +587,9 @@ namespace KSPAPIExtensions.PartMessage
                     Debug.LogException(ex);
                 }
             }
+
+            if (HighLogic.LoadedSceneIsEditor)
+                UpdatePartHeirachy();
         }
 
         internal void Send(CurrentEventInfoImpl message)
@@ -858,6 +861,7 @@ namespace KSPAPIExtensions.PartMessage
                 if (!ReferenceEquals(ship.parts[0], currRoot))
                 {
                     Part root = ship.parts[0];
+                    CheckKnown(root);
                     SendAsyncProxy<PartRootSelected>(this, root);
                     currRoot = root;
                 }
@@ -869,16 +873,48 @@ namespace KSPAPIExtensions.PartMessage
             }
         }
 
+        private Part lastSelected;
+       
+        private void UpdatePartHeirachy()
+        {
+            Part selectedPart = EditorLogic.SelectedPart;
+            if (ReferenceEquals(lastSelected, selectedPart)
+                || (lastSelected = selectedPart) == null
+                || CheckKnown(selectedPart))
+                return;
+
+            // Parts that are clones (Alt-Click) won't have had their attach methods called.
+            PartAttachSymmetry(selectedPart);
+        }
+
+        private bool CheckKnown(Part part)
+        {
+            if (!part.isClone)
+                return true;
+
+            KnownPartMarker marker = part.GetComponent<KnownPartMarker>();
+            if (marker == null)
+            {
+                marker = part.gameObject.AddComponent<KnownPartMarker>();
+                marker.known = true;
+                return false;
+            }
+
+            bool ret = marker.known;
+            marker.known = true;
+            return ret;
+        }
+
         private void OnPartAttach(GameEvents.HostTargetAction<Part, Part> data)
         {
             // Target is the parent, host is the child part
             SendAsyncProxy<PartParentChanged>(this, data.host, data.target);
             SendAsyncProxy<PartChildAttached>(this, data.target, data.host);
 
-            if (data.host == data.host.GetSymmetryCloneOriginal())
+            if (CheckKnown(data.host))
                 return;
 
-            // The clones won't have had either of the above listeners called for any of their children
+            // Symmetry clones won't have had either of the above listeners called for any of their children
             PartAttachSymmetry(data.host);
         }
 
@@ -994,6 +1030,12 @@ namespace KSPAPIExtensions.PartMessage
             loadedInScene = false;
             Destroy(gameObject);
         }
+    }
+
+    internal class KnownPartMarker : MonoBehaviour
+    {
+        [NonSerialized]
+        internal bool known;
     }
 
     internal class ListenerFerramAerospaceResearch : MonoBehaviour

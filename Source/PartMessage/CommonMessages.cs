@@ -116,12 +116,14 @@ namespace KSPAPIExtensions.PartMessage
 
     /// <summary>
     /// A root part has been selected in the VAB.
+    /// Note: this is automatically invoked by the framework, so you don't ever need to raise the event.
     /// </summary>
     [PartMessageDelegate(typeof(PartHeirachyChanged))]
     public delegate void PartRootSelected();
 
     /// <summary>
     /// A root part has been removed in the VAB.
+    /// Note: this is automatically invoked by the framework, so you don't ever need to raise the event.
     /// </summary>
     [PartMessageDelegate(typeof(PartHeirachyChanged))]
     public delegate void PartRootRemoved();
@@ -149,7 +151,7 @@ namespace KSPAPIExtensions.PartMessage
     /// <summary>
     /// There has been some change to the configuration for the engine.
     /// </summary>
-    [PartMessageDelegate()]
+    [PartMessageDelegate]
     public delegate void PartEngineConfigChanged();
 
 }
