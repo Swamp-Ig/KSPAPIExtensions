@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -9,84 +10,54 @@ using KSPAPIExtensions.PartMessage;
 // ReSharper disable once CheckNamespace
 namespace KSPAPIExtensions
 {
-    [KSPAddon(KSPAddon.Startup.EditorAny, false)]
-    internal class UIPartActionsExtendedEditorRegistrationAddon : MonoBehaviour
+    [KSPAddon(KSPAddon.Startup.Instantly, true)]
+    internal class UIPartActionsExtendedRegistration : MonoBehaviour
     {
-        private static bool loadedInScene;
+        private static bool loaded;
+        private static bool isLatestVersion;
+        private bool isRunning;
 
         public void Start()
         {
-            if (loadedInScene)
+            if (loaded)
             {
+                // prevent multiple copies of same object
                 Destroy(gameObject);
                 return;
             }
-            loadedInScene = true;
+            loaded = true;
 
-            UIPartActionsExtendedRegistration.Register();
+            DontDestroyOnLoad(gameObject);
+
+            isLatestVersion = SystemUtils.RunTypeElection(typeof(UIPartActionsExtendedRegistration), "KSPAPIExtensions");
         }
 
-        public void Update()
+        public void OnLevelWasLoaded(int level)
         {
-            loadedInScene = false;
-            Destroy(gameObject);
-        }
-    }
-    [KSPAddon(KSPAddon.Startup.Flight, false)]
-    internal class UIPartActionsExtendedFlightRegistrationAddon : MonoBehaviour
-    {
-        private static bool loadedInScene;
-
-        public void Start()
-        {
-            if (loadedInScene)
-            {
-                Destroy(gameObject);
+            if(isRunning)
+                StopCoroutine("Register");
+            if (!HighLogic.LoadedSceneIsEditor && !HighLogic.LoadedSceneIsFlight)
                 return;
-            }
-            loadedInScene = true;
-
-            UIPartActionsExtendedRegistration.Register();
+            isRunning = true;
+            StartCoroutine("Register");
         }
 
-        public void Update()
+        internal IEnumerator Register()
         {
-            loadedInScene = false;
-            Destroy(gameObject);
-        }
-    }
-
-    internal static class UIPartActionsExtendedRegistration
-    {
-        private static bool? master;
-
-        private static bool CheckMaster()
-        {
-            // Do the version election
-            // If we are loaded from the first loaded assembly that has this class, then we are responsible to destroy
-            var candidates = from ass in AssemblyLoader.loadedAssemblies
-                             where ass.assembly.GetType(typeof(UIPartActionsExtendedRegistration).FullName, false) != null
-                             orderby ass.assembly.GetName().Version descending, ass.path ascending
-                             select ass;
-            return ReferenceEquals(candidates.First().assembly, Assembly.GetExecutingAssembly());
-        }
-
-        internal static void Register()
-        {
-            if (master == null)
-                master = CheckMaster();
-
-            UIPartActionController controller = UIPartActionController.Instance;
-            if (controller == null)
-            {
-                Debug.LogError("Controller instance is null");
-                return;
-            }
+            UIPartActionController controller;
+            while((controller = UIPartActionController.Instance) == null)
+                yield return false;
 
             FieldInfo typesField = (from fld in controller.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
                                     where fld.FieldType == typeof(List<Type>)
                                     select fld).First();
-            List<Type> fieldPrefabTypes = (List<Type>)typesField.GetValue(controller);
+            List<Type> fieldPrefabTypes;
+            while((fieldPrefabTypes = (List<Type>)typesField.GetValue(controller)) == null
+                || fieldPrefabTypes.Count == 0 
+                || !UIPartActionController.Instance.fieldPrefabs.Find(cls => cls.GetType() == typeof(UIPartActionFloatRange)))
+                yield return false;
+
+            Debug.Log("[KAE] Registering field prefabs for version " + Assembly.GetExecutingAssembly().GetName().Version + (isLatestVersion?" (latest)":""));
 
             // Register prefabs. This needs to be done for every version of the assembly. (the types might be called the same, but they aren't the same)
             controller.fieldPrefabs.Add(UIPartActionFloatEdit.CreateTemplate());
@@ -96,13 +67,13 @@ namespace KSPAPIExtensions
             fieldPrefabTypes.Add(typeof(UI_ChooseOption));
 
             // Register the label and resource editor fields. This should only be done by the most recent version.
-            if (GameSceneFilter.AnyEditor.IsLoaded() && master.Value)
+            if (isLatestVersion && GameSceneFilter.AnyEditor.IsLoaded())
             {
-                int idx = controller.fieldPrefabs.FindIndex(item => item.GetType() == typeof(UIPartActionLabel));
+                int idx = controller.fieldPrefabs.FindIndex(item => item.GetType() == typeof (UIPartActionLabel));
                 controller.fieldPrefabs[idx] = UIPartActionLabelImproved.CreateTemplate((UIPartActionLabel)controller.fieldPrefabs[idx]);
-
                 controller.resourceItemEditorPrefab = UIPartActionResourceEditorImproved.CreateTemplate(controller.resourceItemEditorPrefab);
             }
+            isRunning = false;
         }
     }
 
