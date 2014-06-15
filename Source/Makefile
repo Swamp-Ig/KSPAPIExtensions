@@ -7,6 +7,7 @@ PLUGINDIR	:= ${APIGAMEDATA}/Plugins
 TARGETS		:= KSPAPIExtensions.dll
 
 API_FILES := \
+	CommonAPI/ResourceExtensions.cs \
     DuckTyping/AmbiguousTypesException.cs \
     DuckTyping/DelegateDuckCaster.cs \
     DuckTyping/DelegateDuckProxyType.cs \
