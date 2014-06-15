@@ -139,6 +139,27 @@ namespace KSPAPIExtensions
 
             return version;
         }
+
+        /// <summary>
+        /// Retrieve the best available title string available in the given assembly.
+        /// </summary>
+        /// <param name="assembly">The assembly from which to retrieve the title string</param>
+        /// <returns>The title string from AssemblyTitle if available, otherwise the name of the dll.</returns>
+        public static string GetAssemblyTitle (Assembly assembly)
+        {
+            string title = assembly.GetName().Name;
+
+            var cattrs = assembly.GetCustomAttributes(true);
+            foreach (var attr in cattrs) {
+                if (attr is AssemblyTitleAttribute) {
+                    var ver = attr as AssemblyTitleAttribute;
+                    title = ver.Title;
+                    break;
+                }
+            }
+
+            return title;
+        }
     }
 
     // ReSharper disable InconsistentNaming
