@@ -119,6 +119,8 @@ namespace KSPAPIExtensions
             PartMessageService.Send<PartResourceInitialAmountChanged>(this, part, resource, resource.amount);
             if (scene == UI_Scene.Editor)
                 SetSymCounterpartsAmount(resource.amount);
+            resourceAmnt.Text = resource.amount.ToString("F1");
+            GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
         }
 
         protected new void SetSymCounterpartsAmount(double amount)
