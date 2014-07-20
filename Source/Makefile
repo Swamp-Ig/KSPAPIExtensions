@@ -1,5 +1,17 @@
-KSPDIR		:= ${HOME}/ksp/KSP_linux
-MANAGED		:= ${KSPDIR}/KSP_Data/Managed
+ifeq ($(OS),Windows_NT)
+	# do 'Doze stuff
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		KSPDIR  := ${HOME}/.local/share/Steam/SteamApps/common/Kerbal\ Space\ Program
+		MANAGED := ${KSPDIR}/KSP_Data/Managed/
+	endif
+	ifeq ($(UNAME_S),Darwin)
+		KSPDIR  := ${HOME}/Library/Application\ Support/Steam/SteamApps/common/Kerbal\ Space\ Program/
+		MANAGED := ${KSPDIR}/KSP.app/Contents/Data/Managed/
+	endif
+endif
+
 GAMEDATA	:= ${KSPDIR}/GameData
 APIGAMEDATA	:= ${GAMEDATA}/KSPAPIExt
 PLUGINDIR	:= ${APIGAMEDATA}/Plugins
