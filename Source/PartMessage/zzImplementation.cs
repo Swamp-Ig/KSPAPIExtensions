@@ -854,7 +854,13 @@ namespace KSPAPIExtensions.PartMessage
             if (!HighLogic.LoadedSceneIsEditor)
                 return;
 
+            if (EditorLogic.fetch == null)
+                return;
+
             var ship = EditorLogic.fetch.ship;
+
+            if (ship == null)
+                return;
 
             if (ship.parts.Count > 0)
             {
