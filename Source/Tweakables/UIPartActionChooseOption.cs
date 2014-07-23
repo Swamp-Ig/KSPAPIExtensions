@@ -104,11 +104,13 @@ namespace KSPAPIExtensions
 
         private void OnValueChanged(IUIObject obj)
         {
+            slider.SetValueChangedDelegate(null);
             if (FieldInfo.options == null || FieldInfo.options.Length == 0)
                 selectedIdx = -1;
             else
                 selectedIdx = Mathf.RoundToInt(slider.Value * (FieldInfo.options.Length - 1));
             SetValueFromIdx();
+            slider.SetValueChangedDelegate(OnValueChanged);
         }
 
         private void SetValueFromIdx()
