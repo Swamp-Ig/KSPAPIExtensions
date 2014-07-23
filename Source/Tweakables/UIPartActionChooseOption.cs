@@ -151,7 +151,15 @@ namespace KSPAPIExtensions
             {
                 fieldName.Text = field.guiName + ": " + FieldInfo.options[selectedIdx];
             }
-            slider.Value = selectedIdx / (float)((FieldInfo.options ?? FieldInfo.display).Length - 1);
+            int length = (FieldInfo.options ?? FieldInfo.display).Length;
+            if (length > 1)
+            {
+                slider.Value = selectedIdx / (float)(length - 1);
+            }
+            else
+            {
+                slider.Value = 1;
+            }
         }
 
 
