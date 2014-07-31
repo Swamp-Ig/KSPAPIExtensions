@@ -78,6 +78,13 @@ namespace KSPAPIExtensions
             return candidates.First();
         }
 
+        /// <summary>
+        /// Find a version-tagged class for an untagged class.
+        /// 
+        /// The tagged class must be directly derived from the untagged class and in the same assembly and namespace.
+        /// </summary>
+        /// <param name="baseClass">The untagged class for which the tagged class will be searched. The <see cref="Type.FullName"/> attribute.</param>
+        /// <returns>The tagged class if found, otherwise the base class</returns>
         public static Type VersionTaggedType(Type baseClass)
         {
             var ass = baseClass.Assembly;
