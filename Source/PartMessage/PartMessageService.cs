@@ -239,7 +239,7 @@ namespace KSPAPIExtensions.PartMessage
 
                 foreach (Component comp in serviceGo.GetComponents<Component>())
                 {
-                    if (comp.GetType().FullName == typeof(ServiceImpl).FullName)
+                    if (comp.GetType().FullName.StartsWith(typeof(ServiceImpl).FullName))
                         return _instance = DuckTyping.Cast<IPartMessageService>(comp);
                 }
 
