@@ -78,6 +78,17 @@ namespace KSPAPIExtensions
             return candidates.First();
         }
 
+        public static Type VersionTaggedType(Type baseClass)
+        {
+            var ass = baseClass.Assembly;
+            Type tagged = ass.GetTypes().Where(t => t.BaseType == baseClass).Where(t => t.FullName.StartsWith(baseClass.FullName)).FirstOrDefault();
+            if (tagged != null) {
+                Debug.Log(String.Format("[VersionTaggedType] found {0} for {1}", tagged.FullName, baseClass.FullName));
+                return tagged;
+            }
+            return baseClass;
+        }
+
         public static LinkedListNode<T> FindFirstNode<T>(this LinkedList<T> list, Predicate<T> match)
         {
             for (var node = list.First; node != null; node = node.Next)

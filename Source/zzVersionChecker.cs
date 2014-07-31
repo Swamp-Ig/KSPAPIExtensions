@@ -43,7 +43,6 @@ namespace KSPAPIExtensions
      * http://forum.kerbalspaceprogram.com/threads/65395-Voluntarily-Locking-Plugins-to-a-Particular-KSP-Version
      */
 
-    [KSPAddon(KSPAddon.Startup.Instantly, true)]
     internal class CompatibilityChecker : MonoBehaviour
     {
         public static bool IsCompatible()

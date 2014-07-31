@@ -243,7 +243,7 @@ namespace KSPAPIExtensions
 
     internal class OnEditorUpdateUtility : PartModule, IOnEditorUpdateUtility
     {
-        public static readonly Type LatestVersion = SystemUtils.TypeElectionWinner(typeof (OnEditorUpdateUtility), "KSPAPIExtensions");
+        public static readonly Type LatestVersion = SystemUtils.VersionTaggedType(SystemUtils.TypeElectionWinner(typeof (OnEditorUpdateUtility), "KSPAPIExtensions"));
 
         public override void OnStart(StartState state)
         {

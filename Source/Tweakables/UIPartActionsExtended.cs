@@ -10,7 +10,6 @@ using KSPAPIExtensions.PartMessage;
 // ReSharper disable once CheckNamespace
 namespace KSPAPIExtensions
 {
-    [KSPAddon(KSPAddon.Startup.Instantly, true)]
     internal class UIPartActionsExtendedRegistration : MonoBehaviour
     {
         private static bool loaded;
@@ -124,7 +123,7 @@ namespace KSPAPIExtensions
         }
 
         protected new void SetSymCounterpartsAmount(double amount)
-	    {
+        {
             if (part == null)
                 return;
 
@@ -136,13 +135,13 @@ namespace KSPAPIExtensions
                 symResource.amount = amount;
                 PartMessageService.Send<PartResourceInitialAmountChanged>(this, sym, symResource, symResource.amount);
             }
-	    }
+        }
 
         internal static UIPartActionResourceEditorImproved CreateTemplate(UIPartActionResourceEditor oldEditor)
         {
             GameObject editGo = (GameObject)Instantiate(oldEditor.gameObject);
             Destroy(editGo.GetComponent<UIPartActionResourceEditor>());
-            UIPartActionResourceEditorImproved edit = editGo.AddComponent<UIPartActionResourceEditorImproved>();
+            UIPartActionResourceEditorImproved edit = (UIPartActionResourceEditorImproved) editGo.AddComponent(SystemUtils.VersionTaggedType(typeof (UIPartActionResourceEditorImproved)));
             editGo.SetActive(false);
             edit.transform.parent = oldEditor.transform.parent;
             edit.transform.localPosition = oldEditor.transform.localPosition;
@@ -195,7 +194,7 @@ namespace KSPAPIExtensions
         {
             GameObject labelGo = (GameObject)Instantiate(oldLabel.gameObject);
             Destroy(labelGo.GetComponent<UIPartActionLabel>());
-            UIPartActionLabelImproved label = labelGo.AddComponent<UIPartActionLabelImproved>();
+            UIPartActionLabelImproved label = (UIPartActionLabelImproved)labelGo.AddComponent(SystemUtils.VersionTaggedType(typeof (UIPartActionLabelImproved)));
             labelGo.SetActive(false);
             label.transform.parent = oldLabel.transform.parent;
             label.transform.localPosition = oldLabel.transform.localPosition;

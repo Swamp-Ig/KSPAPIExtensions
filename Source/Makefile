@@ -54,6 +54,7 @@ API_FILES := \
     Utils/SystemUtils.cs \
     Utils/UnityUtils.cs \
     zzVersionChecker.cs \
+    tagged_classes.cs \
 	$e
 
 RESGEN2	:= resgen2

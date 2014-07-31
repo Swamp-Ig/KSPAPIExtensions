@@ -901,7 +901,7 @@ namespace KSPAPIExtensions.PartMessage
             KnownPartMarker marker = part.GetComponent<KnownPartMarker>();
             if (marker == null)
             {
-                marker = part.gameObject.AddComponent<KnownPartMarker>();
+                marker = (KnownPartMarker)part.gameObject.AddComponent(SystemUtils.VersionTaggedType(typeof (KnownPartMarker)));
                 marker.known = true;
                 return false;
             }
@@ -990,7 +990,6 @@ namespace KSPAPIExtensions.PartMessage
     }
 
     #region Initialization and Other Mod Interfacing
-    [KSPAddonFixed(KSPAddon.Startup.Instantly, false, typeof(PartMessageServiceInitializer))]
     internal class PartMessageServiceInitializer : MonoBehaviour
     {
         private static bool loadedInScene;
@@ -1024,7 +1023,7 @@ namespace KSPAPIExtensions.PartMessage
             DontDestroyOnLoad(serviceGo);
 
             // Assign the service to the static variable
-            PartMessageService._instance = serviceGo.AddComponent<ServiceImpl>();
+            PartMessageService._instance = (ServiceImpl)serviceGo.AddComponent(SystemUtils.VersionTaggedType(typeof (ServiceImpl)));
 
             // At this point the losers will duck-type themselves to the latest version of the service if they're called.
 
@@ -1065,7 +1064,7 @@ namespace KSPAPIExtensions.PartMessage
 
             SetBasicDragModuleProperties = (Action<Part>)Delegate.CreateDelegate(typeFARAeroUtil, info);
 
-            serviceGo.AddComponent<ListenerFerramAerospaceResearch>();
+            serviceGo.AddComponent(SystemUtils.VersionTaggedType(typeof (ListenerFerramAerospaceResearch)));
         }
 
         private IPartMessageService service;
