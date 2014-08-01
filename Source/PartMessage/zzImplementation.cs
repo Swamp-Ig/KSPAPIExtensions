@@ -898,10 +898,10 @@ namespace KSPAPIExtensions.PartMessage
             if (!part.isClone)
                 return true;
 
-            KnownPartMarker marker = (KnownPartMarker)part.GetComponent(SystemUtils.VersionTaggedType(typeof(KnownPartMarker)));
+            KnownPartMarker marker = part.gameObject.GetTaggedComponent<KnownPartMarker>();
             if (marker == null)
             {
-                marker = (KnownPartMarker)part.gameObject.AddComponent(SystemUtils.VersionTaggedType(typeof (KnownPartMarker)));
+                marker = part.gameObject.AddTaggedComponent<KnownPartMarker>();
                 marker.known = true;
                 return false;
             }
@@ -1023,7 +1023,7 @@ namespace KSPAPIExtensions.PartMessage
             DontDestroyOnLoad(serviceGo);
 
             // Assign the service to the static variable
-            PartMessageService._instance = (ServiceImpl)serviceGo.AddComponent(SystemUtils.VersionTaggedType(typeof (ServiceImpl)));
+            PartMessageService._instance = serviceGo.AddTaggedComponent<ServiceImpl>();
 
             // At this point the losers will duck-type themselves to the latest version of the service if they're called.
 
@@ -1064,7 +1064,7 @@ namespace KSPAPIExtensions.PartMessage
 
             SetBasicDragModuleProperties = (Action<Part>)Delegate.CreateDelegate(typeFARAeroUtil, info);
 
-            serviceGo.AddComponent(SystemUtils.VersionTaggedType(typeof (ListenerFerramAerospaceResearch)));
+            serviceGo.AddTaggedComponent<ListenerFerramAerospaceResearch>();
         }
 
         private IPartMessageService service;

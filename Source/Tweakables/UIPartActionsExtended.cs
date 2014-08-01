@@ -141,7 +141,7 @@ namespace KSPAPIExtensions
         {
             GameObject editGo = (GameObject)Instantiate(oldEditor.gameObject);
             Destroy(editGo.GetComponent<UIPartActionResourceEditor>());
-            UIPartActionResourceEditorImproved edit = (UIPartActionResourceEditorImproved) editGo.AddComponent(SystemUtils.VersionTaggedType(typeof (UIPartActionResourceEditorImproved)));
+            UIPartActionResourceEditorImproved edit = editGo.AddTaggedComponent<UIPartActionResourceEditorImproved>();
             editGo.SetActive(false);
             edit.transform.parent = oldEditor.transform.parent;
             edit.transform.localPosition = oldEditor.transform.localPosition;
@@ -194,7 +194,7 @@ namespace KSPAPIExtensions
         {
             GameObject labelGo = (GameObject)Instantiate(oldLabel.gameObject);
             Destroy(labelGo.GetComponent<UIPartActionLabel>());
-            UIPartActionLabelImproved label = (UIPartActionLabelImproved)labelGo.AddComponent(SystemUtils.VersionTaggedType(typeof (UIPartActionLabelImproved)));
+            UIPartActionLabelImproved label = labelGo.AddTaggedComponent<UIPartActionLabelImproved>();
             labelGo.SetActive(false);
             label.transform.parent = oldLabel.transform.parent;
             label.transform.localPosition = oldLabel.transform.localPosition;

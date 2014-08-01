@@ -28,7 +28,7 @@ namespace KSPAPIExtensions
         {
             // Create the control
             GameObject editGo = new GameObject("UIPartActionFloatEdit", SystemUtils.VersionTaggedType(typeof(UIPartActionFloatEdit)));
-            UIPartActionFloatEdit edit = (UIPartActionFloatEdit)editGo.GetComponent(SystemUtils.VersionTaggedType(typeof(UIPartActionFloatEdit)));
+            UIPartActionFloatEdit edit = editGo.GetTaggedComponent<UIPartActionFloatEdit>();
             editGo.SetActive(false);
 
             // TODO: since I don'type have access to EZE GUI, I'm copying out bits from other existing GUIs 
