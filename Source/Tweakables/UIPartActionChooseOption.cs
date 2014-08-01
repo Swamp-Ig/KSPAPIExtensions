@@ -18,8 +18,8 @@ namespace KSPAPIExtensions
         public static UIPartActionChooseOption CreateTemplate()
         {
             // Create the control
-            GameObject editGo = new GameObject("UIPartActionChooseOption", typeof(UIPartActionChooseOption));
-            UIPartActionChooseOption edit = editGo.GetComponent<UIPartActionChooseOption>();
+            GameObject editGo = new GameObject("UIPartActionChooseOption", SystemUtils.VersionTaggedType(typeof(UIPartActionChooseOption)));
+            UIPartActionChooseOption edit = (UIPartActionChooseOption)editGo.GetComponent(SystemUtils.VersionTaggedType(typeof(UIPartActionChooseOption)));
             editGo.SetActive(false);
 
             // TODO: since I don'type have access to EZE GUI, I'm copying out bits from other existing GUIs 

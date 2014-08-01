@@ -898,7 +898,7 @@ namespace KSPAPIExtensions.PartMessage
             if (!part.isClone)
                 return true;
 
-            KnownPartMarker marker = part.GetComponent<KnownPartMarker>();
+            KnownPartMarker marker = (KnownPartMarker)part.GetComponent(SystemUtils.VersionTaggedType(typeof(KnownPartMarker)));
             if (marker == null)
             {
                 marker = (KnownPartMarker)part.gameObject.AddComponent(SystemUtils.VersionTaggedType(typeof (KnownPartMarker)));

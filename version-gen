@@ -32,6 +32,8 @@ gen_tagged_class_wrappers() {
     gen_tagged_class UIPartActionsExtendedRegistration
     gen_tagged_class UIPartActionResourceEditorImproved
     gen_tagged_class UIPartActionLabelImproved
+    gen_tagged_class UIPartActionFloatEdit
+    gen_tagged_class UIPartActionChooseOption
     echo "    [KSPAddon(KSPAddon.Startup.Instantly, true)]"
     gen_tagged_class CompatibilityChecker
     gen_tagged_class OnEditorUpdateUtility
