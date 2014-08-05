@@ -37,6 +37,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CommonAPI\GameObjectExt.cs" />
+    <Compile Include="CommonAPI\ResourceExtensions.cs" />
     <Compile Include="DuckTyping\AmbiguousTypesException.cs" />
     <Compile Include="DuckTyping\DelegateDuckCaster.cs" />
     <Compile Include="DuckTyping\DelegateDuckProxyType.cs" />
@@ -53,6 +55,7 @@
     <Compile Include="DuckTyping\IStaticDuckCaster.cs" />
     <Compile Include="DuckTyping\ToTypeFromTypeTree.cs" />
     <Compile Include="DuckTyping\TypeKey.cs" />
+    <Compile Include="tagged_classes.cs" />
     <Compile Include="Utils\ConfigNodeUtils.cs" />
     <Compile Include="Utils\EngineWrapper.cs" />
     <Compile Include="Utils\MathUtils.cs" />
@@ -97,8 +100,7 @@
     </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
+    <PreBuildEvent>sh version-gen</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
