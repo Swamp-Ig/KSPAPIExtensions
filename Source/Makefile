@@ -89,7 +89,8 @@ clean:
 	rm -f ${TARGETS} AssemblyInfo.cs
 
 install: all
-	mkdir -p ${PLUGINDIR}
+	mkdir -p ${APIGAMEDATA} ${PLUGINDIR}
 	cp ${TARGETS} ${PLUGINDIR}
+	cp ../Licence.txt ${APIGAMEDATA}
 
 .PHONY: all clean install
