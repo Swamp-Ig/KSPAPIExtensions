@@ -40,7 +40,7 @@ namespace KSPAPIExtensions
         MainMenu = 1 << GameScenes.MAINMENU,
         SpaceCenter = 1 << GameScenes.SPACECENTER,
         VAB = 1 << GameScenes.EDITOR,
-        SPH = 1 << GameScenes.SPH,
+        SPH = 1 << GameScenes.EDITOR,
         Flight = 1 << GameScenes.FLIGHT,
         TrackingStation = 1 << GameScenes.TRACKSTATION,
         Settings = 1 << GameScenes.SETTINGS,
