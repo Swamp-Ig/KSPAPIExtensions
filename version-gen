@@ -5,8 +5,11 @@
 cd "$(dirname "$0")"
 cd "$(git rev-parse --show-toplevel)"
 
-version=$(git describe --tags --long --match "v*" | sed 's:v\(.*\)-\(.*\)-.*:\1.\2:')
-short_version=$(git describe --tags --long --match "v*" | sed 's:v\([^-]*\).*:\1:')
+git_desc=$(git describe --tags --long --match "v*")
+version=$(echo "$git_desc" | sed 's:v\(.*\)-\(.*\)-.*:\1.\2:')
+short_version=$(echo "$git_desc" | sed 's:v\([^-]*\).*:\1:')
+major=$(echo "$git_desc" | sed 's:v\(.*\)\.\(.*\)\..*:\1:')
+minor=$(echo "$git_desc" | sed 's:v\(.*\)\.\(.*\)\..*:\2:')
 
 version_tag=`echo $version | tr . _`
 
@@ -47,7 +50,7 @@ gen_tagged_class_wrappers() {
     echo "}"
 }
 
-sed -e "s/@VERSION@/$version/" Source/Properties/AssemblyInfo.in > tmp
+sed -e "s/@VERSION@/$version/;s/@MAJOR/$major/;s/@MINOR/$minor/" Source/Properties/AssemblyInfo.in > tmp
 cmp -s Source/Properties/AssemblyInfo.cs tmp || cp tmp Source/Properties/AssemblyInfo.cs
 
 #sed -e "s/@VERSION@/$short_version/" ProceduralParts.version.in > tmp
