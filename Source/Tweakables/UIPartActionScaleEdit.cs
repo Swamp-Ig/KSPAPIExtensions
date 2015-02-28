@@ -9,10 +9,6 @@ namespace KSPAPIExtensions
     [UI_ScaleEdit]
     public class UIPartActionScaleEdit : UIPartActionFieldItem
     {
-        public float[] intervals = { 0.625f, 1.25f, 2.5f, 5f };
-        public float[] incrementSlide = {0.01f, 0.025f, 0.05f };
-        public int intervalNo = 0;
-
         public SpriteText fieldName;
         public SpriteText fieldValue;
         public UIButton incLargeDown;
@@ -22,6 +18,8 @@ namespace KSPAPIExtensions
         public UIProgressSlider slider;
 
         private float value;
+        public int intervalNo = 0;
+
         private uint controlState;
 
         public static UIPartActionScaleEdit CreateTemplate()
@@ -118,38 +116,59 @@ namespace KSPAPIExtensions
             float newValue = this.value;
             if (up) 
             {
-                if (intervalNo < intervals.Length - 2)
+                if (intervalNo < FieldInfo.intervals.Length - 2)
+                {
+                    if (newValue == FieldInfo.intervals[intervalNo+1])
+                        newValue = FieldInfo.intervals[intervalNo+2];
                     intervalNo++;
+                }
                 else
-                    newValue = intervals [intervals.Length - 1];
+                    newValue = FieldInfo.intervals [intervalNo+1];
             }
             else
             {
                 if (intervalNo > 0)
+                {
+                    if (newValue == FieldInfo.intervals[intervalNo])
+                        newValue = FieldInfo.intervals[intervalNo-1];
                     intervalNo--;
+                }
                 else
-                    newValue = intervals [0];
+                    newValue = FieldInfo.intervals [0];
             }
             RestrictToInterval (newValue);
         }
 
         private void slider_OnValueChanged(IUIObject obj)
         {
-            float valueLow = intervals [intervalNo];
-            float valueHi  = intervals [intervalNo + 1];
+            float valueLow = FieldInfo.intervals [intervalNo];
+            float valueHi  = FieldInfo.intervals [intervalNo + 1];
             float newValue = Mathf.Lerp(valueLow, valueHi, slider.Value);
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (incrementSlide[intervalNo] != 0)
-                newValue = Mathf.Round(newValue / incrementSlide[intervalNo]) * incrementSlide[intervalNo];
+            float inc = GetIncrementSlide ();
+            if (inc != 0)
+                newValue = Mathf.Round(newValue / inc) * inc;
 
             RestrictToInterval(newValue);
         }
 
+        private void OnValueChanged(float newValue)
+        {
+            //update intervalNo
+            intervalNo = 0;
+
+            for( int i=0; i<FieldInfo.intervals.Length-1; i++)
+                if(newValue >= FieldInfo.intervals[i])
+                    intervalNo = i;
+
+            UpdateValueDisplay (newValue);
+        }
+
         private void RestrictToInterval(float newValue)
         {
-            newValue = Math.Max(newValue, intervals [intervalNo]);
-            newValue = Math.Min(newValue, intervals [intervalNo + 1]);
+            newValue = Math.Max(newValue, FieldInfo.intervals [intervalNo]);
+            newValue = Math.Min(newValue, FieldInfo.intervals [intervalNo + 1]);
 
             SetValueFromGUI(newValue);
         }
@@ -168,6 +187,16 @@ namespace KSPAPIExtensions
             return isModule ? field.GetValue<float>(partModule) : field.GetValue<float>(part);
         }
 
+        private float GetIncrementSlide()
+        {
+            if (FieldInfo.incrementSlide.Length > 1)
+                return FieldInfo.incrementSlide [intervalNo];
+            else if (FieldInfo.incrementSlide.Length == 1)
+                return FieldInfo.incrementSlide [0];
+            else
+                return 0;
+        }
+
         public override void UpdateItem()
         {
             // update from fieldName. No listeners.
@@ -177,7 +206,7 @@ namespace KSPAPIExtensions
             float fValue = GetFieldValue();
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (fValue != value)
-                UpdateValueDisplay(fValue);
+                OnValueChanged(fValue);
 
             uint newHash = FieldInfo.GetHashedState();
             if (controlState != newHash)
@@ -191,32 +220,77 @@ namespace KSPAPIExtensions
         {
             this.value = newValue;
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            float inc = incrementSlide [intervalNo];
+            float inc = GetIncrementSlide();
             if (inc != 0)
                 newValue = Mathf.Round(newValue / inc) * inc;
 
-            float valueLow = intervals [intervalNo];
-            float valueHi  = intervals [intervalNo+1];
-            slider.Value = Mathf.InverseLerp(valueLow, valueHi, newValue);
-
+            if (slider.gameObject.activeSelf)
+            {
+                float valueLow = FieldInfo.intervals [intervalNo];
+                float valueHi = FieldInfo.intervals [intervalNo + 1];
+                slider.Value = Mathf.InverseLerp (valueLow, valueHi, newValue);
+            }
             fieldValue.Text = newValue.ToStringExt(field.guiFormat) + field.guiUnits;
         }
 
         private void UpdateFieldInfo()
         {
-            incLargeDown.gameObject.SetActive(true);
-            incLargeDownLabel.gameObject.SetActive(true);
-            incLargeUp.gameObject.SetActive(true);
-            incLargeUpLabel.gameObject.SetActive(true);
+            if (CheckConsistency ())
+            {
+                incLargeDown.gameObject.SetActive (true);
+                incLargeDownLabel.gameObject.SetActive (true);
+                incLargeUp.gameObject.SetActive (true);
+                incLargeUpLabel.gameObject.SetActive (true);
 
-            slider.transform.localScale = new Vector3(0.81f, 1, 1);
-            fieldName.transform.localPosition = new Vector3(24, -8, 0); //>23
+                slider.transform.localScale = new Vector3(0.81f, 1, 1);
+                fieldName.transform.localPosition = new Vector3(24, -8, 0);
 
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (incrementSlide[intervalNo] == 0)
-                slider.gameObject.SetActive(false);
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (GetIncrementSlide() == 0)
+                    slider.gameObject.SetActive(false);
+                else
+                    slider.gameObject.SetActive(true);
+            }
             else
-                slider.gameObject.SetActive(true);
+            {
+                incLargeDown.gameObject.SetActive (false);
+                incLargeDownLabel.gameObject.SetActive (false);
+                incLargeUp.gameObject.SetActive (false);
+                incLargeUpLabel.gameObject.SetActive (false);
+
+                slider.gameObject.SetActive(false);
+            }
+        }
+
+        public bool CheckConsistency()
+        {
+            if (FieldInfo.intervals.Length < 2)
+                return false;
+
+            if ((FieldInfo.incrementSlide.Length > 1) &&
+                (FieldInfo.incrementSlide.Length < FieldInfo.intervals.Length - 1))
+            {
+                Debug.LogWarning("[KAE Warning] UI_ScaleEdit: not enough incrementSlide values. Using only the first." + Environment.NewLine + StackTraceUtility.ExtractStackTrace());
+                float first = FieldInfo.incrementSlide[0];
+                FieldInfo.incrementSlide = new float[1];
+                FieldInfo.incrementSlide [0] = first;
+                return true;
+            }
+
+            for (int i = 0; i < FieldInfo.intervals.Length-2; i++)
+            {
+                if (FieldInfo.intervals [i] == FieldInfo.intervals [i + 1])
+                {
+                    Debug.LogWarning("[KAE Warning] UI_ScaleEdit: duplicate value in intervals list" + Environment.NewLine + StackTraceUtility.ExtractStackTrace());
+                    return false;
+                }
+                else if (FieldInfo.intervals [i] > FieldInfo.intervals [i + 1])
+                {
+                    Debug.LogWarning("[KAE Warning] UI_ScaleEdit: intervals list not sorted" + Environment.NewLine + StackTraceUtility.ExtractStackTrace());
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
@@ -226,39 +300,31 @@ namespace KSPAPIExtensions
     {
         private const string UIControlName = "UIPartActionScaleEdit";
 
-        public float minValue = float.NegativeInfinity;
-        public float maxValue = float.PositiveInfinity;
+        public float[] intervals = { 1, 2, 4 };
+        public float[] incrementSlide = {0.02f, 0.04f };
+
+        public float MinValue()
+        {
+            return intervals [0];
+        }
+        public float MaxValue()
+        {
+            return intervals [intervals.Length-1];
+        }
 
         public override void Load(ConfigNode node, object host)
         {
             base.Load(node, host);
-            if (!ParseFloat(out minValue, node, "minValue", UIControlName, null))
-            {
-                minValue = float.NegativeInfinity;
-            }
-            if (!ParseFloat(out maxValue, node, "maxValue", UIControlName, null))
-            {
-                maxValue = float.PositiveInfinity;
-            }
         }
 
         public override void Save(ConfigNode node, object host)
         {
             base.Save(node, host);
-            if (!float.IsNegativeInfinity(minValue))
-                node.AddValue("minValue", minValue.ToString(CultureInfo.InvariantCulture));
-            if (!float.IsPositiveInfinity(maxValue))
-                node.AddValue("maxValue", maxValue.ToString(CultureInfo.InvariantCulture));
         }
 
-        internal unsafe uint GetHashedState()
+        internal uint GetHashedState()
         {
-            // ReSharper disable LocalVariableHidesMember
-            fixed (float* minValue = &this.minValue, maxValue = &this.maxValue)
-            {
-                return *((uint*)minValue) ^ *((uint*)maxValue);
-            }
-            // ReSharper restore LocalVariableHidesMember
+            return ((uint)intervals.GetHashCode()) ^ ((uint)incrementSlide.GetHashCode());
         }
     }
 }
