@@ -222,14 +222,16 @@ namespace KSPAPIExtensions
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             float inc = GetIncrementSlide();
             if (inc != 0)
-                newValue = Mathf.Round(newValue / inc) * inc;
-
-            if (slider.gameObject.activeSelf)
             {
+                newValue = Mathf.Round(newValue / inc) * inc;
+                slider.gameObject.SetActive(true);
                 float valueLow = FieldInfo.intervals [intervalNo];
                 float valueHi = FieldInfo.intervals [intervalNo + 1];
                 slider.Value = Mathf.InverseLerp (valueLow, valueHi, newValue);
             }
+            else
+                slider.gameObject.SetActive(false);
+
             fieldValue.Text = newValue.ToStringExt(field.guiFormat) + field.guiUnits;
         }
 
