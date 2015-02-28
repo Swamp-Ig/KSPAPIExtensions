@@ -44,6 +44,7 @@ API_FILES := \
     Properties/AssemblyInfo.cs \
     Tweakables/UIPartActionChooseOption.cs \
     Tweakables/UIPartActionFloatEdit.cs \
+    Tweakables/UIPartActionScaleEdit.cs \
     Tweakables/UIPartActionsExtended.cs \
     Utils/ConfigNodeUtils.cs \
     Utils/DebuggingUtils.cs \

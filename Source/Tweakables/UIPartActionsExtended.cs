@@ -62,6 +62,9 @@ namespace KSPAPIExtensions
             controller.fieldPrefabs.Add(UIPartActionFloatEdit.CreateTemplate());
             fieldPrefabTypes.Add(typeof(UI_FloatEdit));
 
+            controller.fieldPrefabs.Add(UIPartActionScaleEdit.CreateTemplate());
+            fieldPrefabTypes.Add(typeof(UI_ScaleEdit));
+
             controller.fieldPrefabs.Add(UIPartActionChooseOption.CreateTemplate());
             fieldPrefabTypes.Add(typeof(UI_ChooseOption));
 
