@@ -64,7 +64,7 @@ namespace KSPAPIExtensions
             // Even if you don't lock down functionality, you should return true if your users
             // can expect a future update to be available.
             //
-            return Versioning.version_major == 0 && Versioning.version_minor == 90 && Versioning.Revision == 0;
+            return Versioning.version_major == 1 && Versioning.version_minor == 0 && Versioning.Revision == 0;
 
             /*-----------------------------------------------*\
             | IMPLEMENTERS SHOULD NOT EDIT BEYOND THIS POINT! |

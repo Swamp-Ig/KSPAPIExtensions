@@ -174,16 +174,16 @@ namespace KSPAPIExtensions.Utils
                 }
             }
         }
-        public FloatCurve velocityCurve
+        public FloatCurve velCurve
         {
             get
             {
                 switch (type)
                 {
                     case ModuleType.MODULEENGINES:
-                        return mE.velocityCurve;
+                        return mE.velCurve;
                     case ModuleType.MODULEENGINESFX:
-                        return mEFX.velocityCurve;
+                        return mEFX.velCurve;
                     default:
                         throw new InvalidProgramException();
                 }
@@ -193,26 +193,26 @@ namespace KSPAPIExtensions.Utils
                 switch (type)
                 {
                     case ModuleType.MODULEENGINES:
-                        mE.velocityCurve = value;
+                        mE.velCurve = value;
                         break;
                     case ModuleType.MODULEENGINESFX:
-                        mEFX.velocityCurve = value;
+                        mEFX.velCurve = value;
                         break;
                     default:
                         throw new InvalidProgramException();
                 }
             }
         }
-        public bool useVelocityCurve
+        public bool useVelCurve
         {
             get
             {
                 switch (type)
                 {
                     case ModuleType.MODULEENGINES:
-                        return mE.useVelocityCurve;
+                        return mE.useVelCurve;
                     case ModuleType.MODULEENGINESFX:
-                        return mEFX.useVelocityCurve;
+                        return mEFX.useVelCurve;
                     default:
                         throw new InvalidProgramException();
                 }
@@ -222,10 +222,10 @@ namespace KSPAPIExtensions.Utils
                 switch (type)
                 {
                     case ModuleType.MODULEENGINES:
-                        mE.useVelocityCurve = value;
+                        mE.useVelCurve = value;
                         break;
                     case ModuleType.MODULEENGINESFX:
-                        mEFX.useVelocityCurve = value;
+                        mEFX.useVelCurve = value;
                         break;
                     default:
                         throw new InvalidProgramException();
