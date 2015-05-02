@@ -3,7 +3,7 @@ ifeq ($(OS),Windows_NT)
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
-		KSPDIR  := ${HOME}/.local/share/Steam/SteamApps/common/Kerbal\ Space\ Program
+		KSPDIR  := ${HOME}/ksp/KSP_linux
 		MANAGED := ${KSPDIR}/KSP_Data/Managed/
 	endif
 	ifeq ($(UNAME_S),Darwin)
