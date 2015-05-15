@@ -2,7 +2,7 @@
 using UnityEngine;
 
 // ReSharper disable once CheckNamespace
-namespace KSPAPIExtensions
+namespace KSPAPIEL
 {
     [UI_ChooseOption]
     public class UIPartActionChooseOption : UIPartActionFieldItem

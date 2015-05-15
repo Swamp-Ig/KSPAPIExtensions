@@ -2,44 +2,10 @@
 using UnityEngine;
 
 // ReSharper disable once CheckNamespace
-namespace KSPAPIExtensions
+namespace KSPAPIEL
 {
     public static class MathUtils
     {
-
-        /// <summary>
-        /// Clamp a value between the max and min values. If &lt; min it will be changed to min, if &gt; max it will be changed to max.
-        /// </summary>
-        /// <param name="value">Value to clamp</param>
-        /// <param name="min">Minimum</param>
-        /// <param name="max">Maximum</param>
-        /// <returns>true if the value has been clamped.</returns>
-        public static bool TestClamp(ref float value, float min, float max)
-        {
-            if (value < min)
-            {
-                value = min;
-                return true;
-            }
-            if (value > max)
-            {
-                value = max;
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Round value to the nearest. 
-        /// </summary>
-        /// <param name="value">Value to round</param>
-        /// <param name="precision">Precision, eg 0.1, 0.02, 0.005</param>
-        /// <returns>The rounded value</returns>
-        public static float RoundTo(float value, float precision)
-        {
-            return Mathf.Round(value / precision) * precision;
-        }
-
         /// <summary>
         /// Format a numeric value using SI prefexes. 
         /// 
@@ -124,115 +90,6 @@ namespace KSPAPIExtensions
         public static string ToStringExt(this float value, string format)
         {
             return ToStringExt((double)value, format);
-        }
-
-        /// <summary>
-        /// Parse a string in SI format - with SI unit prefix to a double.
-        /// Note - units must not be present.
-        /// </summary>
-        public static bool TryParseExt(string str, out double value)
-        {
-            str = str.Trim();
-            if(str.Length == 0) {
-                value = 0;
-                return false;
-            }
-
-            char last = str[str.Length - 1];
-
-            if (char.IsDigit(last))
-                return double.TryParse(str, out value);
-
-            double exponent;
-            int newLen = str.Length - 1;
-            switch (last)
-            {
-                case 'k': exponent = 1e3; break;
-                case 'M': exponent = 1e6; break;
-                case 'G': exponent = 1e9; break;
-                case 'T': exponent = 1e12; break;
-                case 'P': exponent = 1e15; break;
-                case 'E': exponent = 1e18; break;
-                case 'Z': exponent = 1e21; break;
-                case 'Y': exponent = 1e24; break;
-                case 'm': 
-                    exponent = 1e-3; break;
-                case '\x3bc': 
-                case '\xb5':
-                case 'u':
-                    exponent = 1e-6; break;
-                case 'c':
-                    if (!str.EndsWith("mic"))
-                    {
-                        value = 0;
-                        return false;
-                    }
-                    newLen = str.Length - 3;
-                    exponent = 1e-6;
-                    break;
-                case 'n': exponent = 1e-9; break;
-                case 'p': exponent = 1e-12; break;
-                case 'f': exponent = 1e-15; break;
-                case 'a': exponent = 1e-18; break;
-                case 'z': exponent = 1e-21; break;
-                case 'y': exponent = 1e-24; break;
-                default:
-                    value = 0;
-                    return false;
-            }
-
-            double parsed;
-            if (!double.TryParse(str.Substring(0, newLen), out parsed))
-            {
-                value = 0;
-                return false;
-            }
-
-            value = parsed * exponent;
-            return true;
-        }
-
-        /// <summary>
-        /// Parse a string in SI format - with SI unit prefix to a float.
-        /// Note - units must not be present.
-        /// </summary>
-        public static bool TryParseExt(string str, out float value)
-        {
-            double dVal;
-            if (TryParseExt(str, out dVal))
-            {
-                value = (float)dVal;
-                return true;
-            }
-            value = 0;
-            return false;
-        }
-
-        /// <summary>
-        /// Round a number to a set number of significant figures.
-        /// </summary>
-        /// <param name="d">number to round</param>
-        /// <param name="sigFigs">number of significant figures, defaults to 3</param>
-        /// <returns></returns>
-        public static float RoundSigFigs(this float d, int sigFigs = 3)
-        {
-            
-            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))) - sigFigs;
-            float div = Mathf.Pow(10, exponent);
-            return Mathf.Round(d / div) * div;
-        }
-
-        /// <summary>
-        /// Round a number to a set number of significant figures.
-        /// </summary>
-        /// <param name="value">number to round</param>
-        /// <param name="sigFigs">number of significant figures, defaults to 3</param>
-        /// <returns></returns>
-        public static double RoundSigFigs(this double value, int sigFigs = 3)
-        {
-            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(value))) - sigFigs;
-            double div = Mathf.Pow(10, exponent);
-            return Math.Round(value / div) * div;
         }
 
         /// <summary>
@@ -343,27 +200,6 @@ namespace KSPAPIExtensions
                 return v => (Math.Round(v / div / mult) * mult).ToString("F0");
             }
             return v => (v/div).ToString("F" + (sigFigs - exp - 1));
-        }
-
-
-        /// <summary>
-        /// Formats a mass in tons as either tons if >= 1.0, or as grams if &lt; 1.0
-        /// </summary>
-        public static string FormatMass(float mass, int sigFigs = 4, int exponent = 0)
-        {
-            return mass < 1.0f ? 
-                mass.ToStringSI(sigFigs, exponent + 6, "g") : 
-                mass.ToStringSI(sigFigs, exponent, "t");
-        }
-
-        /// <summary>
-        /// Formats a mass in tons as either tons if >= 1.0, or as grams if &lt; 1.0
-        /// </summary>
-        public static string FormatMass(double mass, int sigFigs = 4, int exponent = 0)
-        {
-            return mass < 1.0f ? 
-                mass.ToStringSI(sigFigs, exponent+6, "g") : 
-                mass.ToStringSI(sigFigs, exponent, "t");
         }
     }
 

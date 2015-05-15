@@ -6,7 +6,7 @@ using System.Reflection;
 using UnityEngine;
 
 // ReSharper disable once CheckNamespace
-namespace KSPAPIExtensions
+namespace KSPAPIEL
 {
     public static class SystemUtils
     {

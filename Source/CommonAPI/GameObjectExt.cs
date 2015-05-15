@@ -5,7 +5,7 @@ using UnityEngine;
 
 using KSP.IO;
 
-namespace KSPAPIExtensions {
+namespace KSPAPIEL {
 	internal static class GameObjectExtension
 	{
 		internal static T AddTaggedComponent<T> (this GameObject go) where T : Component

@@ -5,10 +5,9 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using KSPAPIExtensions.PartMessage;
 
 // ReSharper disable once CheckNamespace
-namespace KSPAPIExtensions
+namespace KSPAPIEL
 {
     internal class UIPartActionsExtendedRegistration : MonoBehaviour
     {
@@ -28,7 +27,7 @@ namespace KSPAPIExtensions
 
             DontDestroyOnLoad(gameObject);
 
-            isLatestVersion = SystemUtils.RunTypeElection(typeof(UIPartActionsExtendedRegistration), "KSPAPIExtensions");
+			isLatestVersion = SystemUtils.RunTypeElection(typeof(UIPartActionsExtendedRegistration), "KSPAPIEL");
         }
 
         public void OnLevelWasLoaded(int level)
@@ -118,7 +117,6 @@ namespace KSPAPIExtensions
 
             SIPrefix prefix = resource.maxAmount.GetSIPrefix();
             resource.amount = prefix.Round(slider.Value * resource.maxAmount, digits:4);
-            PartMessageService.Send<PartResourceInitialAmountChanged>(this, part, resource, resource.amount);
             if (scene == UI_Scene.Editor)
                 SetSymCounterpartsAmount(resource.amount);
             resourceAmnt.Text = resource.amount.ToString("F1");
@@ -136,7 +134,6 @@ namespace KSPAPIExtensions
                     continue;
                 PartResource symResource = sym.Resources[resource.info.name];
                 symResource.amount = amount;
-                PartMessageService.Send<PartResourceInitialAmountChanged>(this, sym, symResource, symResource.amount);
             }
         }
 
@@ -205,5 +202,4 @@ namespace KSPAPIExtensions
             return label;
         }
     }
-
 }
