@@ -62,7 +62,7 @@ namespace KSPAPIEL
         /// </summary>
         public static string ToStringExt(this double value, string format)
         {
-            if (format[0] == 'S' || format[0] == 's')
+			if (format.Length > 0 && (format[0] == 'S' || format[0] == 's'))
             {
                 if (format.Length == 1)
                     return ToStringSI(value, 0);
