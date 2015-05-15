@@ -34,7 +34,7 @@ Utility methods to determine relationships between parts, plus some debugging co
 
 Available is two extra tweakable controls, plus improvements to the stock tweakers. To use these you *must* include the KSIAPIUtils.dll in your project rather than just copying the code as there's an election process to ensure the latest version is being run. If backwards compatibility breaks, I will ensure that the user is warned to upgrade plugins.
 
-## SI Formatting for label fields.
+~~## SI Formatting for label fields.
 
 Just use an 'S' type format code and SI prefixes will be handled. 
 
@@ -43,9 +43,9 @@ Just use an 'S' type format code and SI prefixes will be handled.
 	public float tankVolume = 0.0f;
 ````
 
-For this example, the tankVolume variable is in kL, and will be displayed with 3 sig figs of accuracy.
+For this example, the tankVolume variable is in kL, and will be displayed with 3 sig figs of accuracy.~~
 
-## SI Formatting and dynamic updating for resources in the editor
+~~## SI Formatting and dynamic updating for resources in the editor
 
 This happens transparently. You can change the amount and maxAmount variables in your PartResource object in the editor, and they will be updated in the tweaker.
 
@@ -57,7 +57,7 @@ If you add and remove resources, you will need to force a refresh of the part tw
 	UIPartActionWindow window = part.FindActionWindow();
 	if (window != null)
 		window.displayDirty = true;
-````
+````~~
 
 ## UI_ChooseOption
 
@@ -106,7 +106,7 @@ if incrementSmall is not set, then no button is visible in the control. If incre
 
 The slider is set to run between the smallest available increment, so in the above if the current value was 1.3, then the slider would run from 1.25 to 1.5.
 
-# PartMessage
+~~# PartMessage
 
 This is an improvement over the existing SendMessage system of Unity. It creates a publish/subscribe model for messages both within and between parts on a vessel. It will automatically wire message event senders and listeners in a PartModule or Part if they have the appropriate attributes.
 
@@ -191,4 +191,4 @@ Note the two optional filtering properties.
 
 ## Advanced message management
 
-You can filter messages, buffer them up and send them in one hit, and send them dynamically. I won't go into the full details in this document. Have a look at the source for more details.
+You can filter messages, buffer them up and send them in one hit, and send them dynamically. I won't go into the full details in this document. Have a look at the source for more details.~~
