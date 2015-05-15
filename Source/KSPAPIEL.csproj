@@ -12,6 +12,7 @@
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <UseMSBuildEngine>False</UseMSBuildEngine>
+    <AssemblyName>KSPAPIEL</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -25,18 +26,16 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <NoWarn>1607</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>KSPAPIEL</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <BaseIntermediateOutputPath>..\..\Build\KSPAPIExtensions\obj\</BaseIntermediateOutputPath>
-    <OutputPath>.</OutputPath>
+    <OutputPath>..\GameData\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>KSPAPIExtensions</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="tagged_classes.cs" />
@@ -69,15 +68,19 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\_KSPAssemblies\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System">
       <HintPath>..\..\_KSPAssemblies\System.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\..\_KSPAssemblies\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\_KSPAssemblies\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
 </Project>
