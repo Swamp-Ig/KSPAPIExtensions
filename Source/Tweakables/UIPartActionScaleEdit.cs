@@ -218,9 +218,17 @@ namespace KSPAPIEL
 
         private void UpdateValueDisplay(float newValue)
         {
+			float inc = GetIncrementSlide();
+
+			if (inc != 0 &&
+				Mathf.Abs(this.value - newValue) >= 0.5 * inc)
+			{
+				GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
+			}
+
             this.value = newValue;
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            float inc = GetIncrementSlide();
+            
             if (inc != 0)
             {
                 float valueLow = FieldInfo.intervals [intervalNo];
