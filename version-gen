@@ -28,9 +28,8 @@ gen_tagged_class_wrappers() {
     echo "using System.Collections.Generic;"
     echo "using System.Linq;"
     echo "using System.Reflection;"
-    echo "using DeftTech.DuckTyping;"
     echo "using UnityEngine;"
-    echo "namespace KSPAPIExtensions {"
+    echo "namespace KSPAPIEL {"
     echo "    [KSPAddon(KSPAddon.Startup.Instantly, true)]"
     gen_tagged_class UIPartActionsExtendedRegistration
     gen_tagged_class UIPartActionResourceEditorImproved
@@ -39,14 +38,6 @@ gen_tagged_class_wrappers() {
     gen_tagged_class UIPartActionChooseOption
     echo "    [KSPAddon(KSPAddon.Startup.Instantly, true)]"
     gen_tagged_class CompatibilityChecker
-    gen_tagged_class OnEditorUpdateUtility
-    echo "}"
-    echo "namespace KSPAPIExtensions.PartMessage {"
-    gen_tagged_class ServiceImpl
-    gen_tagged_addon PartMessageServiceInitializer
-    gen_tagged_class PartMessageServiceInitializer
-    gen_tagged_class KnownPartMarker
-    gen_tagged_class ListenerFerramAerospaceResearch
     echo "}"
 }
 
