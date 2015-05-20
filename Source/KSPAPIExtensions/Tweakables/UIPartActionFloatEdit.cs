@@ -259,12 +259,12 @@ namespace KSPAPIExtensions
 
         private void UpdateValueDisplay(float newValue)
         {
-			if (FieldInfo.incrementSlide != 0 &&
-				Mathf.Abs(this.value - newValue) >= 0.5f * FieldInfo.incrementSlide
-			)
-			{
-				GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
-			}
+            if (FieldInfo.incrementSlide != 0 &&
+                Mathf.Abs(this.value - newValue) >= 0.5f * FieldInfo.incrementSlide
+            )
+            {
+                GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
+            }
 
             this.value = newValue;
             // ReSharper disable once CompareOfFloatsByEqualityOperator

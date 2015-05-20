@@ -27,7 +27,7 @@ namespace KSPAPIExtensions
 
             DontDestroyOnLoad(gameObject);
 
-			isLatestVersion = SystemUtils.RunTypeElection(typeof(UIPartActionsExtendedRegistration), "KSPAPIExtensions");
+            isLatestVersion = SystemUtils.RunTypeElection(typeof(UIPartActionsExtendedRegistration), "KSPAPIExtensions");
         }
 
         public void OnLevelWasLoaded(int level)
