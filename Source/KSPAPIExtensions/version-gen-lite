@@ -3,7 +3,7 @@
 # Updates the version code
 
 cd "$(dirname "$0")"
-cd "$(git rev-parse --show-toplevel)"
+# cd "$(git rev-parse --show-toplevel)"
 
 git_desc=$(git describe --tags --long --match "v*")
 version=$(echo "$git_desc" | sed 's:v\(.*\)-\(.*\)-.*:\1.\2:')
@@ -28,7 +28,6 @@ gen_tagged_class_wrappers() {
     echo "using System.Collections.Generic;"
     echo "using System.Linq;"
     echo "using System.Reflection;"
-    echo "using DeftTech.DuckTyping;"
     echo "using UnityEngine;"
     echo "namespace KSPAPIExtensions {"
     echo "    [KSPAddon(KSPAddon.Startup.Instantly, true)]"
@@ -39,24 +38,16 @@ gen_tagged_class_wrappers() {
     gen_tagged_class UIPartActionChooseOption
     echo "    [KSPAddon(KSPAddon.Startup.Instantly, true)]"
     gen_tagged_class CompatibilityChecker
-    gen_tagged_class OnEditorUpdateUtility
-    echo "}"
-    echo "namespace KSPAPIExtensions.PartMessage {"
-    gen_tagged_class ServiceImpl
-    gen_tagged_addon PartMessageServiceInitializer
-    gen_tagged_class PartMessageServiceInitializer
-    gen_tagged_class KnownPartMarker
-    gen_tagged_class ListenerFerramAerospaceResearch
     echo "}"
 }
 
-sed -e "s/@VERSION@/$version/;s/@MAJOR/$major/;s/@MINOR/$minor/" Source/Properties/AssemblyInfo.in > tmp
-cmp -s Source/Properties/AssemblyInfo.cs tmp || cp tmp Source/Properties/AssemblyInfo.cs
+sed -e "s/@VERSION@/$version/;s/@MAJOR/$major/;s/@MINOR/$minor/" Properties/AssemblyInfo.in > tmp
+cmp -s Properties/AssemblyInfo.cs tmp || cp tmp Properties/AssemblyInfo.cs
 
 #sed -e "s/@VERSION@/$short_version/" ProceduralParts.version.in > tmp
 #cmp -s ProceduralParts.version tmp || cp tmp ProceduralParts.version
 
 gen_tagged_class_wrappers > tmp
-cmp -s Source/tagged_classes.cs tmp || cp tmp Source/tagged_classes.cs
+cmp -s tagged_classes.cs tmp || cp tmp tagged_classes.cs
 
 rm tmp

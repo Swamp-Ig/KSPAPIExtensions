@@ -106,6 +106,10 @@ if incrementSmall is not set, then no button is visible in the control. If incre
 
 The slider is set to run between the smallest available increment, so in the above if the current value was 1.3, then the slider would run from 1.25 to 1.5.
 
+
+KSPAPIExtras
+================
+KSPAPIExtras is a set of additional tools built on the KSPAPIExtensions framework.  It ships in a separate assembly and depends on KSPAPIExtensions.
 # PartMessage
 
 This is an improvement over the existing SendMessage system of Unity. It creates a publish/subscribe model for messages both within and between parts on a vessel. It will automatically wire message event senders and listeners in a PartModule or Part if they have the appropriate attributes.

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KSPAPIExtensions;
+using System;
 using KSPAPIExtensions.DebuggingUtils;
 
 namespace KSPAPIExtensions.PartMessage

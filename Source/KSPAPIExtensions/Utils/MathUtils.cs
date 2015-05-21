@@ -96,6 +96,11 @@ namespace KSPAPIExtensions
         /// </summary>
         public static string ToStringExt(this double value, string format)
         {
+            if (format.Length < 1)
+            {
+                return value.ToString();
+            }
+
             if (format[0] == 'S' || format[0] == 's')
             {
                 if (format.Length == 1)
@@ -216,7 +221,7 @@ namespace KSPAPIExtensions
         /// <returns></returns>
         public static float RoundSigFigs(this float d, int sigFigs = 3)
         {
-            
+
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs(d))) - sigFigs;
             float div = Mathf.Pow(10, exponent);
             return Mathf.Round(d / div) * div;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KSPAPIExtensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -1006,7 +1007,7 @@ namespace KSPAPIExtensions.PartMessage
             }
             loadedInScene = true;
             
-            if (!SystemUtils.RunTypeElection(typeof(PartMessageService), "KSPAPIExtensions"))
+            if (!SystemUtils.RunTypeElection(typeof(PartMessageService), "KSPAPIExtras"))
                 return;
 
             // So at this point we know we have won the election, and will be using the class versions as in this assembly.
