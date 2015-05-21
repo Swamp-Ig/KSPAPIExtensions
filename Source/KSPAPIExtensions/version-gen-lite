@@ -29,7 +29,7 @@ gen_tagged_class_wrappers() {
     echo "using System.Linq;"
     echo "using System.Reflection;"
     echo "using UnityEngine;"
-    echo "namespace KSPAPIEL {"
+    echo "namespace KSPAPIExtensions {"
     echo "    [KSPAddon(KSPAddon.Startup.Instantly, true)]"
     gen_tagged_class UIPartActionsExtendedRegistration
     gen_tagged_class UIPartActionResourceEditorImproved

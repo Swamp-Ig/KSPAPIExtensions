@@ -24,7 +24,6 @@ gen_tagged_class() {
 }
 
 gen_tagged_class_wrappers() {
-    echo "using KSPAPIEL;"
     echo "using System;"
     echo "using System.Collections.Generic;"
     echo "using System.Linq;"
