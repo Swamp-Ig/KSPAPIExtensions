@@ -70,7 +70,6 @@
     <Compile Include="Utils\UnityUtils.cs" />
     <Compile Include="zzVersionChecker.cs" />
     <Compile Include="Utils\KSPUtils.cs" />
-    <Compile Include="Utils\Compat.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
